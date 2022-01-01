@@ -1,6 +1,9 @@
 import pygame
 import os
 import sys
+from tiles_class import Tiles
+from things_class import Things
+from cat_class import Cat
 
 pygame.init()
 size = W, H = 800, 600
@@ -35,24 +38,9 @@ def start_screen():  # функция запуска стартового экр
     pass
 
 
-class Tile(pygame.sprite.Sprite):  # класс частей поля
-    def __init__(self, *groups):
-        super().__init__(*groups)
-
-
-class Hero(pygame.sprite.Sprite):  # класс героя
-    def __init__(self, *groups):
-        super().__init__(*groups)
-
-
-class Things(pygame.sprite.Sprite):  # класс вещей, которые герой собирает
-    def __init__(self, *groups):
-        super().__init__(*groups)
-
-
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
-hero_group = pygame.sprite.Group()  # группа героя
+cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
 while running:
     for event in pygame.event.get():
@@ -60,8 +48,8 @@ while running:
             running = False
             terminate()
     screen.fill((0, 0, 0))
-    tiles_group.draw(screen)
-    hero_group.draw(screen)
+    tiles_group.draw(screen)    # !тут ещё нет отрисовки вещей!
+    cat_group.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
 pygame.quit()
