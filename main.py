@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+from random import choice
 from tiles_class import Tiles
 from things_class import Things
 from cat_class import Cat
@@ -38,6 +39,21 @@ def start_screen():  # функция запуска стартового экр
     pass
 
 
+def generate_map(sc):
+    map = [[0] * W for i in range(H)]
+    cell_size = 30
+    platforms_long = [3, 4, 5, 6]
+    max_amount = 5
+    left, top = 0, 0
+    fon = pygame.transform.scale(load_image('fon_sky.jpg'), (W, H))
+    screen.blit(fon, (0, 0))
+    for i in range(W):
+        for j in range(H):
+            pygame.draw.rect(sc, (100, 100, 150), (left + (i * cell_size),
+                                               top + (j * cell_size),
+                                               cell_size, cell_size), 1)
+
+
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
@@ -48,7 +64,10 @@ while running:
             running = False
             terminate()
     screen.fill((0, 0, 0))
-    tiles_group.draw(screen)    # !тут ещё нет отрисовки вещей!
+    pygame.display.set_caption('game')
+    generate_map(screen)
+    tiles_group.draw(screen)
+    things_group.draw(screen)
     cat_group.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
