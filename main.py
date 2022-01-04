@@ -1,5 +1,8 @@
 import os
 import sys
+import pygame_gui
+import sqlite3
+from PIL import Image, ImageSequence
 import pygame, pygame.font, pygame.event, pygame.draw, string
 from pygame.locals import *
 from tiles_class import Tiles
@@ -29,12 +32,12 @@ class TextInputBox(pygame.sprite.Sprite):
 
     def render_text(self):
         t_surf = self.font.render(self.text, True, self.color, self.backcolor)
-        self.image = pygame.Surface((max(self.width, t_surf.get_width()+10), 25), pygame.SRCALPHA)
+        self.image = pygame.Surface((max(self.width, t_surf.get_width() + 10), 25), pygame.SRCALPHA)
         if self.backcolor:
             self.image.fill(self.backcolor)
         self.image.blit(t_surf, (5, 5))
         pygame.draw.rect(self.image, self.color, self.image.get_rect().inflate(-2, -2), 2)
-        self.rect = self.image.get_rect(topleft = self.pos)
+        self.rect = self.image.get_rect(topleft=self.pos)
 
     def update(self, event_list):
         for event in event_list:
@@ -77,7 +80,7 @@ def terminate():  # функция завершения игры
 def entry():
     login = TextInputBox(250, 160, 400, FONT)
     password = TextInputBox(250, 230, 400, FONT)
-    group = pygame.sprite.Group(login ,password)
+    group = pygame.sprite.Group(login, password)
     pygame.display.update()
     intro_text = ["Логин", "", "Пароль", "", "", "", "", "", "", "", "", "", "", "", "",
                   "Для продолжения нажмите ПРОБЕЛ"]
@@ -102,7 +105,7 @@ def entry():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     r = False
-                    return login.get(), password.get
+                    return login.get(), password.get()
         group.update(e)
         group.draw(screen)
         pygame.display.flip()
@@ -134,21 +137,84 @@ def start_screen():
         clock.tick(FPS)
 
 
+def play():
+    screen = pygame.display.set_mode(size)
+
+
+def setting():
+    screen = pygame.display.set_mode(size)
+    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    screen.blit(fon, (0, 0))
+    pygame.display.flip()
+
+def menu():
+    screen = pygame.display.set_mode(size)
+    manager = pygame_gui.UIManager((W, H))
+    toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 540), (200, 85)),
+                                          text='Играть', manager=manager)
+    settings = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 540), (200, 85)),
+                                            text='Настройки', manager=manager)
+    gif = Image.open('tomenu.gif')
+    frames = [f.copy().convert("RGBA") for f in ImageSequence.Iterator(gif)]
+    i = 0
+    t = True
+    while t:
+        with Image.open('tomenu.gif') as im:
+            im.seek(i)
+            im.save('new.png'.format(i))
+        i += 1
+        i %= 50
+        fon = pygame.transform.scale(pygame.image.load('new.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == toplay:
+                        t = False
+                        play()
+                    if event.ui_element == settings:
+                        t = False
+                        setting()
+            manager.process_events(event)
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
+
+# ВЕСЬ ЦИКЛ РАБОТЫ ПРОГРАММЫ!!!!!
+
+
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
-
 screen = pygame.display.set_mode((W, H))
 login, password = start_screen()
+con = sqlite3.connect("nyan.db")
+cur = con.cursor()
+try:
+    result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
+    if len(result) == 0:
+        cur.execute("""INSERT INTO users(name, password, maxroad, allmoney) VALUES(?, ?, ?, ?)""",
+                    (login, password, 0, 0)).fetchall()
+        user = (login, password, 0, 0)
+        con.commit()
+    else:
+        user = result[0]
+except:
+    cur.execute('CREATE TABLE users ( id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT,'
+                ' password TEXT, maxroad INTEGER, allmoney INTEGER)')
+    cur.execute("INSERT INTO users(name, password, maxroad, allmoney) "
+                "VALUES(?, ?, ?, ?)", (login, password, 0, 0)).fetchall()
+    user = (login, password, 0, 0)
+    con.commit()
+menu()
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             terminate()
-    screen.fill((0, 0, 0))
-    tiles_group.draw(screen)    # !тут ещё нет отрисовки вещей!
-    cat_group.draw(screen)
-    pygame.display.flip()
-    clock.tick(FPS)
 pygame.quit()
