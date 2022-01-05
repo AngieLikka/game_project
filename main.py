@@ -12,10 +12,12 @@ from cat_class import Cat
 pygame.init()
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
-running = True
 clock = pygame.time.Clock()
 FPS = 60
 FONT = pygame.font.SysFont(None, 25)
+NUM = 0
+CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif", 5: "cat5.gif",
+        6: "cat6.gif", 7: "cat7.gif", 8: "cat8.gif", 9: "cat9.gif", 10: "cat10.gif", 11: "cat11.gif"}
 
 
 class TextInputBox(pygame.sprite.Sprite):
@@ -139,13 +141,72 @@ def start_screen():
 
 def play():
     screen = pygame.display.set_mode(size)
-
-
-def setting():
-    screen = pygame.display.set_mode(size)
-    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    fon = pygame.transform.scale(pygame.image.load('start.jpg'), (W, H))
     screen.blit(fon, (0, 0))
     pygame.display.flip()
+    t = True
+    while t:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+
+def setting():
+    global CATS, NUM
+    screen = pygame.display.set_mode(size)
+    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 640), (200, 50)),
+                                          text='В меню', manager=manager)
+    next = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 600), (200, 85)),
+                                            text='Следующий', manager=manager)
+    t = True
+    i = 0
+    k = 0
+    with Image.open(CATS[NUM]) as im:
+        im.seek(i)
+        im.save('new.png')
+        try:
+            while 1:
+                im.seek(k)
+                k += 1
+        except EOFError:
+            pass
+    while t:
+        with Image.open(CATS[NUM]) as im:
+            im.seek(i)
+            im.save('new.png')
+        i += 1
+        i %= k
+        screen.blit(fon, (0, 0))
+        screen.blit(pygame.transform.scale(pygame.image.load('new.png'), (300, 250)), (300, 180))
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == next:
+                        NUM += 1
+                        NUM %= 12
+                        k = 0
+                        i = 0
+                        with Image.open(CATS[NUM]) as im:
+                            try:
+                                while 1:
+                                    im.seek(k)
+                                    k += 1
+                            except EOFError:
+                                pass
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+            manager.process_events(event)
+        clock.tick(10)
+
 
 def menu():
     screen = pygame.display.set_mode(size)
@@ -154,8 +215,6 @@ def menu():
                                           text='Играть', manager=manager)
     settings = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 540), (200, 85)),
                                             text='Настройки', manager=manager)
-    gif = Image.open('tomenu.gif')
-    frames = [f.copy().convert("RGBA") for f in ImageSequence.Iterator(gif)]
     i = 0
     t = True
     while t:
@@ -166,6 +225,10 @@ def menu():
         i %= 50
         fon = pygame.transform.scale(pygame.image.load('new.png'), (W, H))
         screen.blit(fon, (0, 0))
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        pygame.display.flip()
+        clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -179,10 +242,6 @@ def menu():
                         t = False
                         setting()
             manager.process_events(event)
-        manager.update(FPS)
-        manager.draw_ui(screen)
-        pygame.display.flip()
-        clock.tick(FPS)
 
 # ВЕСЬ ЦИКЛ РАБОТЫ ПРОГРАММЫ!!!!!
 
@@ -212,9 +271,4 @@ except:
     user = (login, password, 0, 0)
     con.commit()
 menu()
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            terminate()
 pygame.quit()
