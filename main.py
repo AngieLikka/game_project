@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from random import randint
+from random import randint, choice
 # from tiles_class import Tiles
 # from things_class import Things
 from cat_class import Cat
@@ -46,7 +46,8 @@ class Tiles(pygame.sprite.Sprite):  # класс частей поля
 class Things(pygame.sprite.Sprite):  # класс вещей, которые герой собирает
     def __init__(self, x, y):
         super().__init__(all_sprites)
-        self.image = pygame.transform.scale(load_image('coin.jpg', -1), (30, 30))
+        im = choice(things_names)
+        self.image = pygame.transform.scale(things_images[im], (30, 30))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -96,6 +97,8 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
+things_images = {'coin' : load_image('coin.jpg', -1), 'money' : load_image('money.png', -1)}
+things_names = ['coin', 'money']
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -105,7 +108,7 @@ while running:
     fon = pygame.transform.scale(load_image('fon_sky.jpg'), (W, H))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('game')
-    if len(tiles_group) < 100:
+    if len(tiles_group) < 5:
         if len(tiles_group) == 0:
             add_platform()
         else:
