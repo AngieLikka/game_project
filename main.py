@@ -8,7 +8,7 @@ from cat_class import Cat
 
 pygame.init()
 pygame.font.init()
-size = W, H = 800, 600
+size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 running = True
 clock = pygame.time.Clock()
@@ -17,6 +17,7 @@ FPS = 60
 score = 0
 font = pygame.font.Font(None, 50)
 PINK = (255, 0, 255)
+WHITE = (255, 255, 255)
 time = 0
 up_scroll = 200
 down_scroll = 400
@@ -100,6 +101,41 @@ def check(y):  # проверка местоположения платформ�
         return False
 
 
+def generate_platforms():
+    if len(tiles_group) < 2:  # создание платформ
+        if len(tiles_group) == 0:
+            add_platform()
+        else:
+            add_platform()
+
+
+def end_screen():
+    text = ['Игра окончена!', '', '', '', '', '', '', 'Для продолжения нажмите любую клавишу']
+    fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+    screen.blit(fon, (0, 0))
+    text_coord = 200
+    for line in text:
+        l = font.render(line, True, WHITE)
+        l_rect = l.get_rect()
+        text_coord += 100
+        l_rect.top = text_coord
+        l_rect.x = 300
+        screen.blit(l, l_rect)
+    t = True
+    while t:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                t = False
+                final_menu()
+
+
+def final_menu():
+    pass
+
+
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
@@ -122,11 +158,7 @@ while running:
     fon = pygame.transform.scale(fon_3, (W, H))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('game')
-    if len(tiles_group) < 2:  # создание платформ
-        if len(tiles_group) == 0:
-            add_platform()
-        else:
-            add_platform()
+    generate_platforms()
     for i in tiles_group:
         if i.rect.x < 0:
             add_platform()
@@ -138,8 +170,8 @@ while running:
     if time % 5 == 0:  # добавление очков
         score += 1
     time += 1
-    if score > 500:
-        v += 0.5
+    if score > 100:
+        v += 0.1
 
     tiles_group.draw(screen)  # отрисовка и обновление спрайтов
     tiles_group.update()
@@ -148,7 +180,7 @@ while running:
     cat_group.draw(screen)
 
     text = font.render(str(score), True, PINK)
-    screen.blit(text, (100, 550))
+    screen.blit(text, (100, 650))
 
     pygame.display.flip()
     clock.tick(FPS)
