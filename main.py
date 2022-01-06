@@ -106,17 +106,20 @@ cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
 things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
 things_names_t1 = ['coin', 'money']
+fon_1 = load_image('fon_sky.jpg')
 things_images_t2 = {'milk': load_image('milk.png'), 'cookie': load_image('cookie.png')}
 things_names_t2 = ['milk', 'cookie']
-things_images_t3 = {'candy': load_image('candy.png')}
-things_names_t3 = ['candy']
+fon_2 = load_image('fon_village.jpg')
+things_images_t3 = {'candy': load_image('candy.png'), 'donut': load_image('donut.png')}
+things_names_t3 = ['candy', 'donut']
+fon_3 = load_image('fon_sweet.jpg')
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             terminate()
     screen.fill((0, 0, 0))
-    fon = pygame.transform.scale(load_image('fon_sky.jpg'), (W, H))
+    fon = pygame.transform.scale(fon_3, (W, H))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('game')
     if len(tiles_group) < 2:  # создание платформ
@@ -130,7 +133,7 @@ while running:
         if i.rect.x + i.rect.width < 0:
             i.kill()
     for i in things_group:
-        if i.rect.x < 0:
+        if i.rect.x + i.rect.width < 0:
             i.kill()
     if time % 5 == 0:  # добавление очков
         score += 1
