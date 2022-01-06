@@ -7,12 +7,17 @@ from random import randint, choice
 from cat_class import Cat
 
 pygame.init()
+pygame.font.init()
 size = W, H = 800, 600
 screen = pygame.display.set_mode(size)
 running = True
 clock = pygame.time.Clock()
 v = 200
 FPS = 60
+score = 0
+font =  pygame.font.Font(None, 50)
+PINK = (255, 0, 255)
+time = 0
 
 
 def load_image(filname, colorkey=None):  # функция загрузки изображения
@@ -97,8 +102,9 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
-things_images = {'coin' : load_image('coin.jpg', -1), 'money' : load_image('money.png', -1)}
-things_names = ['coin', 'money']
+things_images = {'coin' : load_image('coin.jpg', -1), 'money' : load_image('money.png', -1),
+                 'milk' : load_image('milk.png')}
+things_names = ['coin', 'money', 'milk']
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -108,7 +114,7 @@ while running:
     fon = pygame.transform.scale(load_image('fon_sky.jpg'), (W, H))
     screen.blit(fon, (0, 0))
     pygame.display.set_caption('game')
-    if len(tiles_group) < 5:
+    if len(tiles_group) < 2:
         if len(tiles_group) == 0:
             add_platform()
         else:
@@ -121,11 +127,21 @@ while running:
     for i in things_group:
         if i.rect.x < 0:
             i.kill()
+    if time % 2 == 0:
+        score += 1
+    time += 1
+    if score > 500:
+        v += 0.5
+
     tiles_group.draw(screen)
     tiles_group.update()
     things_group.draw(screen)
     things_group.update()
     cat_group.draw(screen)
+
+    text = font.render(str(score), True, PINK)
+    screen.blit(text, (100, 500))
+
     pygame.display.flip()
     clock.tick(FPS)
 pygame.quit()
