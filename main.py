@@ -9,6 +9,7 @@ from tiles_class import Tiles
 from things_class import Things
 from cat_class import Cat
 from random import randint
+from speed_class import Speed
 
 pygame.init()
 size = W, H = 900, 700
@@ -23,7 +24,8 @@ PINK = (255, 0, 255)
 WHITE = (255, 255, 255)
 time = 0
 score = 0
-v = 200
+v = 100
+speed = Speed(v)
 
 
 class TextInputBox(pygame.sprite.Sprite):
@@ -148,15 +150,14 @@ def start_screen():
 def play():
     global time, score, v
     screen = pygame.display.set_mode(size)
-    fon = pygame.transform.scale(fon_1, (W, H))
-    screen.blit(fon, (0, 0))
-    pygame.display.flip()
     t = True
     while t:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
                 terminate()
+        fon = pygame.transform.scale(fon_1, (W, H))
+        screen.blit(fon, (0, 0))
         generate_platforms()
         for i in tiles_group:
             if i.rect.x < 0:
@@ -169,8 +170,8 @@ def play():
         if time % 5 == 0:  # добавление очков
             score += 1
         time += 1
-        if score > 100:
-            v += 0.1
+        if score > 500:
+            speed.change_v()
 
         tiles_group.draw(screen)  # отрисовка и обновление спрайтов
         tiles_group.update()
@@ -180,6 +181,7 @@ def play():
 
         text = FONT.render(str(score), True, PINK)
         screen.blit(text, (100, 650))
+        pygame.display.flip()
 
 
 def add_platform():  # функция добавления платформы
@@ -187,7 +189,7 @@ def add_platform():  # функция добавления платформы
     tile_w = randint(300, 600)
     a = 0
     if check(tile_y):
-        platform = Tiles(W, tile_y, tile_w)
+        platform = Tiles(W, tile_y, tile_w, speed)
         tiles_group.add(platform)
         for i in range(tile_w // 60):
             add_thing(W + a, tile_y)
@@ -195,7 +197,7 @@ def add_platform():  # функция добавления платформы
 
 
 def add_thing(x, y):  # функция добавления вещей на платформы
-    thing = Things(x, y, things_names_t1, things_images_t1)
+    thing = Things(x, y, things_names_t1, things_images_t1, speed)
     things_group.add(thing)
 
 
