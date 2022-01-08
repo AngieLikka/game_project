@@ -14,6 +14,7 @@ from speed_class import Speed
 pygame.init()
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Nyan Cat')
 clock = pygame.time.Clock()
 FPS = 60
 FONT = pygame.font.SysFont(None, 25)
@@ -92,7 +93,7 @@ def entry():
     password = TextInputBox(250, 230, 400, FONT)
     group = pygame.sprite.Group(login, password)
     pygame.display.update()
-    intro_text = ["Логин", "", "Пароль", "", "", "", "", "", "", "", "", "", "", "", "",
+    intro_text = ["Логин", "", "Пароль", "", "Чтобы закончить ввод, нажмите ЕNTER", "", "", "", "", "", "", "", "", "", "",
                   "Для продолжения нажмите ПРОБЕЛ"]
     fon = pygame.transform.scale(pygame.image.load('input.jpg'), (W, H))
     r = True
@@ -111,6 +112,7 @@ def entry():
         e = pygame.event.get()
         for event in e:
             if event.type == pygame.QUIT:
+                r = False
                 terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -148,8 +150,9 @@ def start_screen():
 
 
 def play():
-    global time, score, v
+    global time, score
     screen = pygame.display.set_mode(size)
+    font = pygame.font.SysFont(None, 100)
     t = True
     while t:
         for event in pygame.event.get():
@@ -172,6 +175,21 @@ def play():
         time += 1
         if score > 500:
             speed.change_v()
+        if score == 100:
+            score = 0
+            time = 0
+            speed.set_v()
+            tiles_group.empty()
+            things_group.empty()
+            t = False
+            fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+            screen.blit(fon, (0, 0))
+            t1 = font.render('Игра окончена!', True, WHITE)
+            screen.blit(t1, (200, 200))
+            t2 = FONT.render('Для продолжения нажмите любую клавишу', True, WHITE)
+            screen.blit(t2, (200, 500))
+            pygame.display.flip()
+            end_screen()
 
         tiles_group.draw(screen)  # отрисовка и обновление спрайтов
         tiles_group.update()
@@ -232,19 +250,80 @@ def end_screen():
         l_rect.top = text_coord
         l_rect.x = 300
         screen.blit(l, l_rect)
-    t = True
-    while t:
+    r = True
+    while r:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                t = False
+                r = False
                 terminate()
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                t = False
+                r = False
                 final_menu()
 
 
 def final_menu():
-    pass
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 100), (200, 50)),
+                                          text='В главное меню', manager=manager)
+    watch_rec = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 300), (200, 50)),
+                                             text='Таблица рекордов', manager=manager)
+    toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
+                                          text='Играть', manager=manager)
+    t = True
+    while t:
+        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+                    if event.ui_element == watch_rec:
+                        t = False
+                        records()
+                    if event.ui_element == toplay:
+                        t = False
+                        play()
+            manager.process_events(event)
+            pygame.display.flip()
+
+
+def records():
+    manager = pygame_gui.UIManager((W, H))
+    tofinal = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
+                                           text='Назад', manager=manager)
+    res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(15)
+    text = list(res)
+    r = True
+    while r:
+        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        text_c = 100
+        for line in text:
+            l = FONT.render('     '.join(str(line)), True, WHITE)
+            l_rect = l.get_rect()
+            text_c += 15
+            l_rect.top = text_c
+            l_rect.x = 200
+            text_c += l_rect.height
+            screen.blit(l, l_rect)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tofinal:
+                        r = False
+                        final_menu()
+            manager.process_events(event)
+            pygame.display.flip()
 
 
 def setting():
@@ -346,6 +425,7 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
+game_over_group = pygame.sprite.Group()
 things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
 things_names_t1 = ['coin', 'money']
 fon_1 = load_image('fon_sky.jpg')

@@ -7,3 +7,6 @@ class Speed():
 
     def get_v(self):
         return self.v
+
+    def set_v(self):
+        self.v = 100
