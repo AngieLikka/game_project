@@ -2,7 +2,6 @@ import pygame
 from random import choice
 import os
 import sys
-from speed_class import Speed
 
 
 FPS = 60
@@ -31,6 +30,7 @@ class Things(pygame.sprite.Sprite):  # класс вещей, которые г�
         im = choice(name_t)
         self.image = pygame.transform.scale(image_t[im], (30, 30))
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect.x = x
         self.rect.y = y
         self.speed = sp

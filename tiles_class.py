@@ -1,7 +1,6 @@
 import pygame
 import os
 import sys
-from speed_class import Speed
 
 
 FPS = 60
@@ -29,6 +28,7 @@ class Tiles(pygame.sprite.Sprite):  # класс частей поля
         super().__init__(all_sprites)
         self.image = pygame.transform.scale(load_image('tile.png', -1), (long, 100))
         self.rect = self.image.get_rect()
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect.x = x
         self.rect.y = y
         self.speed = sp
