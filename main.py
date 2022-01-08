@@ -7,7 +7,6 @@ import pygame, pygame.font, pygame.event, pygame.draw, string
 from pygame.locals import *
 from tiles_class import Tiles
 from things_class import Things
-from cat_class import Cat
 from random import randint
 from speed_class import Speed
 
@@ -19,8 +18,57 @@ clock = pygame.time.Clock()
 FPS = 60
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
-CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif", 5: "cat5.gif",
-        6: "cat6.gif", 7: "cat7.gif", 8: "cat8.gif", 9: "cat9.gif", 10: "cat10.gif", 11: "cat11.gif"}
+CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif", 5: "cat6.gif",
+        6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
+
+
+class Cat(pygame.sprite.Sprite):  # класс героя
+    def __init__(self, im, *groups):
+        super().__init__(*groups)
+        self.photo = im
+        self.num = 0
+        self.i = 0
+        try:
+            while 1:
+                im.seek(self.num)
+                self.num += 1
+        except EOFError:
+            pass
+        im.seek(self.i)
+        im.save('new.png')
+        self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
+        self.rect = self.image.get_rect()
+        self.rect.x = 150
+        self.rect.y = 300
+        self.g = 1
+
+    def update(self, n, *args):
+        self.rect = self.rect.move(0, n)
+        if self.g == self.num * 23:
+            self.photo.seek(self.i)
+            self.photo.save('new.png')
+            self.i += 1
+            self.i %= self.num
+            self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
+            self.g = 0
+        self.g += 1
+        flag = False
+        for i in tiles_group:
+            if pygame.sprite.collide_mask(self, i):
+                self.rect = self.rect.move(0, 1)
+                if pygame.sprite.collide_mask(self, i):
+                    self.rect = self.rect.move(-1, 0)
+                self.rect = self.rect.move(0, -1)
+                flag = True
+                break
+        if flag:
+            self.rect = self.rect.move(0, n)
+        for i in things_group:
+            if pygame.sprite.collide_mask(self, i):
+                pass
+            # надо удалить объект и добавить какую-то циферку к сумме баллов
+            
+            
 PINK = (255, 0, 255)
 WHITE = (255, 255, 255)
 time = 0
@@ -154,13 +202,48 @@ def play():
     screen = pygame.display.set_mode(size)
     font = pygame.font.SysFont(None, 100)
     t = True
+    cat = Cat(Image.open(CATS[NUM]))
+    cat_group.add(cat)
+    f = 0
+    r = 0
+    i = 0
+    n = 0
     while t:
+        if n == 15:
+            with Image.open('fon.gif') as im:
+                im.seek(i)
+                im.save('newf.png')
+            i += 1
+            i %= 10
+            n = 0
+        n += 1
+        fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        manager.update(FPS)
+        manager.draw_ui(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
                 terminate()
-        fon = pygame.transform.scale(fon_1, (W, H))
-        screen.blit(fon, (0, 0))
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    f = -1
+                    cat_group.update(-1)
+                if event.key == pygame.K_DOWN:
+                    f = 1
+                    cat_group.update(1)
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    f = 0
+                if event.key == pygame.K_UP:
+                    f = 0
+        if f != 0:
+            r = r + 1
+            if r == 7:
+                cat_group.update(f)
+                r = 0
         generate_platforms()
         for i in tiles_group:
             if i.rect.x < 0:
@@ -195,6 +278,8 @@ def play():
         tiles_group.update()
         things_group.draw(screen)
         things_group.update()
+        cat_group.update(0)
+        screen.blit(fon, (0, 0))
         cat_group.draw(screen)
 
         text = FONT.render(str(score), True, PINK)
@@ -269,29 +354,6 @@ def final_menu():
                                              text='Таблица рекордов', manager=manager)
     toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                           text='Играть', manager=manager)
-    t = True
-    while t:
-        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
-        screen.blit(fon, (0, 0))
-        manager.update(FPS)
-        manager.draw_ui(screen)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                t = False
-                terminate()
-            if event.type == USEREVENT:
-                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
-                    if event.ui_element == tomenu:
-                        t = False
-                        menu()
-                    if event.ui_element == watch_rec:
-                        t = False
-                        records()
-                    if event.ui_element == toplay:
-                        t = False
-                        play()
-            manager.process_events(event)
-            pygame.display.flip()
 
 
 def records():
@@ -324,7 +386,6 @@ def records():
                         final_menu()
             manager.process_events(event)
             pygame.display.flip()
-
 
 def setting():
     global CATS, NUM
@@ -366,7 +427,7 @@ def setting():
                 if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == next:
                         NUM += 1
-                        NUM %= 12
+                        NUM %= 10
                         k = 0
                         i = 0
                         with Image.open(CATS[NUM]) as im:
