@@ -7,10 +7,13 @@ import pygame, pygame.font, pygame.event, pygame.draw, string
 from pygame.locals import *
 from tiles_class import Tiles
 from things_class import Things
+from random import randint
+from speed_class import Speed
 
 pygame.init()
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Nyan Cat')
 clock = pygame.time.Clock()
 FPS = 60
 FONT = pygame.font.SysFont(None, 25)
@@ -64,6 +67,14 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             if pygame.sprite.collide_mask(self, i):
                 pass
             # надо удалить объект и добавить какую-то циферку к сумме баллов
+            
+            
+PINK = (255, 0, 255)
+WHITE = (255, 255, 255)
+time = 0
+score = 0
+v = 100
+speed = Speed(v)
 
 
 class TextInputBox(pygame.sprite.Sprite):
@@ -130,7 +141,7 @@ def entry():
     password = TextInputBox(250, 230, 400, FONT)
     group = pygame.sprite.Group(login, password)
     pygame.display.update()
-    intro_text = ["Логин", "", "Пароль", "", "", "", "", "", "", "", "", "", "", "", "",
+    intro_text = ["Логин", "", "Пароль", "", "Чтобы закончить ввод, нажмите ЕNTER", "", "", "", "", "", "", "", "", "", "",
                   "Для продолжения нажмите ПРОБЕЛ"]
     fon = pygame.transform.scale(pygame.image.load('input.jpg'), (W, H))
     r = True
@@ -149,6 +160,7 @@ def entry():
         e = pygame.event.get()
         for event in e:
             if event.type == pygame.QUIT:
+                r = False
                 terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -186,7 +198,9 @@ def start_screen():
 
 
 def play():
+    global time, score
     screen = pygame.display.set_mode(size)
+    font = pygame.font.SysFont(None, 100)
     t = True
     cat = Cat(Image.open(CATS[NUM]))
     cat_group.add(cat)
@@ -205,6 +219,10 @@ def play():
         n += 1
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
+        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        manager.update(FPS)
+        manager.draw_ui(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -226,11 +244,148 @@ def play():
             if r == 7:
                 cat_group.update(f)
                 r = 0
+        generate_platforms()
+        for i in tiles_group:
+            if i.rect.x < 0:
+                add_platform()
+            if i.rect.x + i.rect.width < 0:
+                i.kill()
+        for i in things_group:
+            if i.rect.x + i.rect.width < 0:
+                i.kill()
+        if time % 5 == 0:  # добавление очков
+            score += 1
+        time += 1
+        if score > 500:
+            speed.change_v()
+        if score == 100:
+            score = 0
+            time = 0
+            speed.set_v()
+            tiles_group.empty()
+            things_group.empty()
+            t = False
+            fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+            screen.blit(fon, (0, 0))
+            t1 = font.render('Игра окончена!', True, WHITE)
+            screen.blit(t1, (200, 200))
+            t2 = FONT.render('Для продолжения нажмите любую клавишу', True, WHITE)
+            screen.blit(t2, (200, 500))
+            pygame.display.flip()
+            end_screen()
+
+        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
+        tiles_group.update()
+        things_group.draw(screen)
+        things_group.update()
         cat_group.update(0)
         screen.blit(fon, (0, 0))
         cat_group.draw(screen)
+
+        text = FONT.render(str(score), True, PINK)
+        screen.blit(text, (100, 650))
         pygame.display.flip()
 
+
+def add_platform():  # функция добавления платформы
+    tile_y = randint(0, H - 100)
+    tile_w = randint(300, 600)
+    a = 0
+    if check(tile_y):
+        platform = Tiles(W, tile_y, tile_w, speed)
+        tiles_group.add(platform)
+        for i in range(tile_w // 60):
+            add_thing(W + a, tile_y)
+            a += 60
+
+
+def add_thing(x, y):  # функция добавления вещей на платформы
+    thing = Things(x, y, things_names_t1, things_images_t1, speed)
+    things_group.add(thing)
+
+
+def check(y):  # проверка местоположения платформы
+    count = 0
+    for i in tiles_group:
+        if y not in range(i.rect.y - 50, i.rect.y + 50):
+            count += 1
+    if len(tiles_group) == count:
+        return True
+    else:
+        return False
+
+
+def generate_platforms():
+    if len(tiles_group) < 2:  # создание платформ
+        if len(tiles_group) == 0:
+            add_platform()
+        else:
+            add_platform()
+
+
+def end_screen():
+    text = ['Игра окончена!', '', '', '', '', '', '', 'Для продолжения нажмите любую клавишу']
+    fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+    screen.blit(fon, (0, 0))
+    text_coord = 200
+    for line in text:
+        l = FONT.render(line, True, WHITE)
+        l_rect = l.get_rect()
+        text_coord += 100
+        l_rect.top = text_coord
+        l_rect.x = 300
+        screen.blit(l, l_rect)
+    r = True
+    while r:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                terminate()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                r = False
+                final_menu()
+
+
+def final_menu():
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 100), (200, 50)),
+                                          text='В главное меню', manager=manager)
+    watch_rec = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 300), (200, 50)),
+                                             text='Таблица рекордов', manager=manager)
+    toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
+                                          text='Играть', manager=manager)
+
+
+def records():
+    manager = pygame_gui.UIManager((W, H))
+    tofinal = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
+                                           text='Назад', manager=manager)
+    res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(15)
+    text = list(res)
+    r = True
+    while r:
+        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        text_c = 100
+        for line in text:
+            l = FONT.render('     '.join(str(line)), True, WHITE)
+            l_rect = l.get_rect()
+            text_c += 15
+            l_rect.top = text_c
+            l_rect.x = 200
+            text_c += l_rect.height
+            screen.blit(l, l_rect)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                r = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tofinal:
+                        r = False
+                        final_menu()
+            manager.process_events(event)
+            pygame.display.flip()
 
 def setting():
     global CATS, NUM
@@ -331,7 +486,16 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
-screen = pygame.display.set_mode((W, H))
+game_over_group = pygame.sprite.Group()
+things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
+things_names_t1 = ['coin', 'money']
+fon_1 = load_image('fon_sky.jpg')
+things_images_t2 = {'milk': load_image('milk.png'), 'cookie': load_image('cookie.png')}
+things_names_t2 = ['milk', 'cookie']
+fon_2 = load_image('fon_village.jpg')
+things_images_t3 = {'candy': load_image('candy.png'), 'donut': load_image('donut.png')}
+things_names_t3 = ['candy', 'donut']
+fon_3 = load_image('fon_sweet.jpg')
 login, password = start_screen()
 con = sqlite3.connect("nyan.db")
 cur = con.cursor()
