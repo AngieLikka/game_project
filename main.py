@@ -187,15 +187,24 @@ def start_screen():
 
 def play():
     screen = pygame.display.set_mode(size)
-    fon = pygame.transform.scale(pygame.image.load('start.jpg'), (W, H))
-    screen.blit(fon, (0, 0))
-    pygame.display.flip()
     t = True
     cat = Cat(Image.open(CATS[NUM]))
     cat_group.add(cat)
     f = 0
     r = 0
+    i = 0
+    n = 0
     while t:
+        if n == 15:
+            with Image.open('fon.gif') as im:
+                im.seek(i)
+                im.save('newf.png')
+            i += 1
+            i %= 10
+            n = 0
+        n += 1
+        fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
+        screen.blit(fon, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
