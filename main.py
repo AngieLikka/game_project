@@ -52,20 +52,16 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
             self.g = 0
         self.g += 1
-        flag = False
+        flag = True
         for i in tiles_group:
             if pygame.sprite.collide_mask(self, i):
-                self.rect = self.rect.move(0, 1)
-                if pygame.sprite.collide_mask(self, i):
-                    self.rect = self.rect.move(-1, 0)
-                self.rect = self.rect.move(0, -1)
-                flag = True
+                flag = False
                 break
         if flag:
             self.rect = self.rect.move(0, n)
         for i in things_group:
             if pygame.sprite.collide_mask(self, i):
-                pass
+                i.kill()
             # надо удалить объект и добавить какую-то циферку к сумме баллов
             
             
