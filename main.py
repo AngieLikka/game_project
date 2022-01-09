@@ -354,6 +354,29 @@ def final_menu():
                                              text='Таблица рекордов', manager=manager)
     toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                           text='Играть', manager=manager)
+    t = True
+    while t:
+        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+        screen.blit(fon, (0, 0))
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+                    if event.ui_element == watch_rec:
+                        t = False
+                        records()
+                    if event.ui_element == toplay:
+                        t = False
+                        play()
+            manager.process_events(event)
+            pygame.display.flip()
 
 
 def records():
