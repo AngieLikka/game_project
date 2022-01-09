@@ -38,12 +38,12 @@ class Cat(pygame.sprite.Sprite):  # класс героя
         im.save('new.png')
         self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
         self.rect = self.image.get_rect()
-        self.rect.x = 150
+        self.rect.x = 200
         self.rect.y = 300
         self.g = 1
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, n, *args):
-        self.rect = self.rect.move(0, n)
         if self.g == self.num * 23:
             self.photo.seek(self.i)
             self.photo.save('new.png')
@@ -55,16 +55,19 @@ class Cat(pygame.sprite.Sprite):  # класс героя
         flag = True
         for i in tiles_group:
             if pygame.sprite.collide_mask(self, i):
-                flag = False
-                break
-        if flag:
-            self.rect = self.rect.move(0, n)
+                if i.rect.x - 13 <= self.rect.x + self.rect.width <= i.rect.x + 13:
+                    self.rect = self.rect.move(-1, 0)
+                else:
+                    flag = False
+                    break
         for i in things_group:
             if pygame.sprite.collide_mask(self, i):
                 i.kill()
             # надо удалить объект и добавить какую-то циферку к сумме баллов
-            
-            
+        if flag:
+            self.rect = self.rect.move(0, n)
+
+
 PINK = (255, 0, 255)
 WHITE = (255, 255, 255)
 time = 0
@@ -137,7 +140,8 @@ def entry():
     password = TextInputBox(250, 230, 400, FONT)
     group = pygame.sprite.Group(login, password)
     pygame.display.update()
-    intro_text = ["Логин", "", "Пароль", "", "Чтобы закончить ввод, нажмите ЕNTER", "", "", "", "", "", "", "", "", "", "",
+    intro_text = ["Логин", "", "Пароль", "", "Чтобы закончить ввод, нажмите ЕNTER", "", "", "", "", "", "", "", "", "",
+                  "",
                   "Для продолжения нажмите ПРОБЕЛ"]
     fon = pygame.transform.scale(pygame.image.load('input.jpg'), (W, H))
     r = True
@@ -399,7 +403,7 @@ def setting():
     tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 640), (200, 50)),
                                           text='В меню', manager=manager)
     next = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 600), (200, 85)),
-                                            text='Следующий', manager=manager)
+                                        text='Следующий', manager=manager)
     t = True
     i = 0
     k = 0
@@ -482,6 +486,7 @@ def menu():
                         t = False
                         setting()
             manager.process_events(event)
+
 
 # ВЕСЬ ЦИКЛ РАБОТЫ ПРОГРАММЫ!!!!!
 
