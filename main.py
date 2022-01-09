@@ -390,6 +390,7 @@ def records():
             manager.process_events(event)
             pygame.display.flip()
 
+
 def setting():
     global CATS, NUM
     screen = pygame.display.set_mode(size)
