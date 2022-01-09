@@ -57,7 +57,10 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             if pygame.sprite.collide_mask(self, i):
                 if i.rect.x - 13 <= self.rect.x + self.rect.width <= i.rect.x + 13:
                     self.rect = self.rect.move(-1, 0)
-                else:
+                if i.rect.y - 50 <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
+                    flag = False
+                    break
+                if i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
                     flag = False
                     break
         for i in things_group:
@@ -207,8 +210,24 @@ def play():
     f = 0
     r = 0
     y = 0
+    k = 0
     n = 0
+    with Image.open('fon2.gif') as im:
+        try:
+            while 1:
+                im.seek(k)
+                k += 1
+        except EOFError:
+            pass
     while t:
+        if n == 25:
+            with Image.open('fon2.gif') as im:
+                im.seek(y)
+                im.save('newf.png')
+            y += 1
+            y %= k
+            n = 0
+        n += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -223,7 +242,7 @@ def play():
                     f = 0
                 if event.key == pygame.K_UP:
                     f = 0
-        fon = pygame.transform.scale(fon_1, (W, H))
+        fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
         generate_platforms()
         for i in tiles_group:
@@ -237,9 +256,10 @@ def play():
         if time % 50 == 0:  # добавление очков
             score += 1
         time += 1
-        if score > 500:
-            speed.change_v()
         if score == 1000:
+            speed.change_v()
+            score = 0
+        if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700:
             score = 0
             time = 0
             speed.set_v()
@@ -256,7 +276,7 @@ def play():
             end_screen()
         if f != 0:
             r = r + 1
-            if r == 7:
+            if r == 5:
                 cat_group.update(f)
                 r = 0
         screen.blit(fon, (0, 0))
