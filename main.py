@@ -36,7 +36,7 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             pass
         im.seek(self.i)
         im.save('new.png')
-        self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
+        self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
         self.rect = self.image.get_rect()
         self.rect.x = 150
         self.rect.y = 300
@@ -49,7 +49,7 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             self.photo.save('new.png')
             self.i += 1
             self.i %= self.num
-            self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
+            self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
             self.g = 0
         self.g += 1
         flag = True
@@ -205,8 +205,6 @@ def play():
     y = 0
     n = 0
     while t:
-        fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
-        screen.blit(fon, (0, 0))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -214,15 +212,15 @@ def play():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     f = -1
-                    cat_group.update(-1)
                 if event.key == pygame.K_DOWN:
                     f = 1
-                    cat_group.update(1)
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
                     f = 0
                 if event.key == pygame.K_UP:
                     f = 0
+        fon = pygame.transform.scale(fon_1, (W, H))
+        screen.blit(fon, (0, 0))
         generate_platforms()
         for i in tiles_group:
             if i.rect.x < 0:
@@ -232,7 +230,7 @@ def play():
         for i in things_group:
             if i.rect.x + i.rect.width < 0:
                 i.kill()
-        if time % 5 == 0:  # добавление очков
+        if time % 50 == 0:  # добавление очков
             score += 1
         time += 1
         if score > 500:
@@ -252,23 +250,20 @@ def play():
             screen.blit(t2, (200, 500))
             pygame.display.flip()
             end_screen()
-        tiles_group.update()
-        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
-        things_group.update()
-        things_group.draw(screen)
-        cat_group.draw(screen)
-
-        text = FONT.render(str(score), True, PINK)
-        screen.blit(text, (100, 650))
-        pygame.display.flip()
         if f != 0:
             r = r + 1
             if r == 7:
                 cat_group.update(f)
                 r = 0
-        cat_group.update(0)
         screen.blit(fon, (0, 0))
+        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
+        tiles_group.update()
+        things_group.draw(screen)
+        things_group.update()
+        cat_group.update(0)
         cat_group.draw(screen)
+        text = FONT.render(str(score), True, PINK)
+        screen.blit(text, (650, 100))
         pygame.display.flip()
 
 
