@@ -200,29 +200,17 @@ def start_screen():
 def play():
     global time, score
     screen = pygame.display.set_mode(size)
-    font = pygame.font.SysFont(None, 100)
     t = True
+    font = pygame.font.SysFont(None, 100)
     cat = Cat(Image.open(CATS[NUM]))
     cat_group.add(cat)
     f = 0
     r = 0
-    i = 0
+    y = 0
     n = 0
     while t:
-        if n == 15:
-            with Image.open('fon.gif') as im:
-                im.seek(i)
-                im.save('newf.png')
-            i += 1
-            i %= 10
-            n = 0
-        n += 1
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
-        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
-        screen.blit(fon, (0, 0))
-        manager.update(FPS)
-        manager.draw_ui(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -239,11 +227,6 @@ def play():
                     f = 0
                 if event.key == pygame.K_UP:
                     f = 0
-        if f != 0:
-            r = r + 1
-            if r == 7:
-                cat_group.update(f)
-                r = 0
         generate_platforms()
         for i in tiles_group:
             if i.rect.x < 0:
@@ -258,7 +241,7 @@ def play():
         time += 1
         if score > 500:
             speed.change_v()
-        if score == 100:
+        if score == 1000:
             score = 0
             time = 0
             speed.set_v()
@@ -273,17 +256,23 @@ def play():
             screen.blit(t2, (200, 500))
             pygame.display.flip()
             end_screen()
-
-        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
         tiles_group.update()
-        things_group.draw(screen)
+        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
         things_group.update()
-        cat_group.update(0)
-        screen.blit(fon, (0, 0))
+        things_group.draw(screen)
         cat_group.draw(screen)
 
         text = FONT.render(str(score), True, PINK)
         screen.blit(text, (100, 650))
+        pygame.display.flip()
+        if f != 0:
+            r = r + 1
+            if r == 7:
+                cat_group.update(f)
+                r = 0
+        cat_group.update(0)
+        screen.blit(fon, (0, 0))
+        cat_group.draw(screen)
         pygame.display.flip()
 
 
