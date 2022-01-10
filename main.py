@@ -23,6 +23,56 @@ CATS = {0: ("cat0.gif", 1), 1: ("cat1.gif", 0), 2: ("cat2.gif", 0), 3: ("cat3.gi
         5: ("cat6.gif", 0), 6: ("cat7.gif", 0), 7: ("cat9.gif", 0), 8: ("cat10.gif", 0), 9: ("cat11.gif", 0)}
 
 
+class BadCat(pygame.sprite.Sprite):
+    def __init__(self, y, *groups):
+        super().__init__(*groups)
+        self.photo = Image.open('evil.gif')
+        self.num = 0
+        self.i = 0
+        try:
+            while 1:
+                self.photo.seek(self.num)
+                self.num += 1
+        except EOFError:
+            pass
+        self.photo.seek(self.i)
+        self.photo.save('newe.png')
+        self.image = pygame.transform.scale(pygame.image.load('newe.png'), (80, 55))
+        self.rect = self.image.get_rect()
+        self.rect.x = 900
+        self.rect.y = y
+        self.g = 1
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def peresec(self):
+        for i in cat_group:
+            return pygame.sprite.collide_mask(self, i)
+
+    def update(self, n, *args):
+        if self.g == self.num * 15:
+            self.photo.seek(self.i)
+            self.photo.save('newe.png')
+            self.i += 1
+            self.i %= self.num
+            self.image = pygame.transform.scale(pygame.image.load('newe.png'), (80, 55))
+            self.g = 0
+        self.g += 1
+        if n == 0:
+            self.rect = self.rect.move(-2, 0)
+
+
+class RainbowBAD(pygame.sprite.Sprite):
+    def __init__(self, x, y, *groups):
+        super().__init__(*groups)
+        self.image = pygame.transform.scale(pygame.image.load('rainbowbad.jpg'), (30, 40))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self, *args):
+        self.rect.x = self.rect.x - 2
+
+
 class Rainbow(pygame.sprite.Sprite):
     def __init__(self, x, y, z, *groups):
         super().__init__(*groups)
@@ -60,7 +110,7 @@ class Cat(pygame.sprite.Sprite):  # класс героя
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, n, *args):
-        if self.g == self.num * 23:
+        if self.g == self.num * 15:
             self.photo.seek(self.i)
             self.photo.save('new.png')
             self.i += 1
@@ -234,6 +284,8 @@ def play():
     y = 0
     k = 0
     n = 0
+    bad = 0
+    main_f = False
     for i in range(-30, 220, 30):
         if i % 60 == 0:
             rain = Rainbow(i, 306, 30)
@@ -284,9 +336,50 @@ def play():
         if time % 50 == 0:  # добавление очков
             score += 1
         time += 1
+        if time % 9000 == 8000:
+            bad = BadCat(random.randint(0, 620))
+            bad_cat.add(bad)
+            for i in range(960, 2080, 30):
+                if i % 60 == 0:
+                    rr = RainbowBAD(i, bad.rect.y + 1)
+                else:
+                    rr = RainbowBAD(i, bad.rect.y - 1)
+                rainbow_bad.add(rr)
         if score % 300 == 0:
             speed.change_v()
-        if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700:
+        if bad != 0 and bad.rect.x <= -82:
+            bad.kill()
+            bad = 0
+        for i in rainbow_bad:
+            if i.rect.x <= - 30:
+                i.kill()
+        if bad != 0:
+            bad.update(0)
+        if f != 0:
+            r = r + 1
+            if r == 3:
+                cat_group.update(f)
+                r = 0
+        if bad != 0:
+            main_f = bad.peresec()
+        screen.blit(fon, (0, 0))
+        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
+        tiles_group.update()
+        things_group.draw(screen)
+        things_group.update()
+        rainbow_bad.update()
+        rainbow_bad.draw(screen)
+        bad_cat.update(1)
+        bad_cat.draw(screen)
+        rainbow.update(cat.rect.x, cat.rect.y)
+        rainbow.draw(screen)
+        cat_group.update(0)
+        cat_group.draw(screen)
+        if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700 or main_f:
+            if bad != 0:
+                bad.kill()
+                for i in rainbow_bad:
+                    i.kill()
             cat.kill()
             score = 0
             time = 0
@@ -302,20 +395,6 @@ def play():
             screen.blit(t2, (200, 500))
             pygame.display.flip()
             end_screen()
-        if f != 0:
-            r = r + 1
-            if r == 3:
-                cat_group.update(f)
-                r = 0
-        screen.blit(fon, (0, 0))
-        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
-        tiles_group.update()
-        things_group.draw(screen)
-        things_group.update()
-        rainbow.update(cat.rect.x, cat.rect.y)
-        rainbow.draw(screen)
-        cat_group.update(0)
-        cat_group.draw(screen)
         text = FONT.render(str(score), True, PINK)
         screen.blit(text, (650, 100))
         pygame.display.update()
@@ -558,7 +637,9 @@ tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
 game_over_group = pygame.sprite.Group()
+bad_cat = pygame.sprite.Group()
 rainbow = pygame.sprite.Group()
+rainbow_bad = pygame.sprite.Group()
 things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
 things_names_t1 = ['coin', 'money']
 fon_1 = load_image('fon_sky.jpg')
