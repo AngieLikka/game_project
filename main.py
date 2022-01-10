@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import pygame_gui
 import sqlite3
@@ -18,8 +19,23 @@ clock = pygame.time.Clock()
 FPS = 60
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
-CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif", 5: "cat6.gif",
-        6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
+CATS = {0: ("cat0.gif", 1), 1: ("cat1.gif", 0), 2: ("cat2.gif", 0), 3: ("cat3.gif", 0), 4: ("cat4.gif", 0),
+        5: ("cat6.gif", 0), 6: ("cat7.gif", 0), 7: ("cat9.gif", 0), 8: ("cat10.gif", 0), 9: ("cat11.gif", 0)}
+
+
+class Rainbow(pygame.sprite.Sprite):
+    def __init__(self, x, y, z, *groups):
+        super().__init__(*groups)
+        self.image = pygame.transform.scale(pygame.image.load('rainbow.jpg'), (z, 40))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self, x, y, *args):
+        self.rect.x = self.rect.x - 1
+        if self.rect.x <= -20:
+            self.rect.x = x + 5
+            self.rect.y = y + random.randint(1, 3)
 
 
 class Cat(pygame.sprite.Sprite):  # класс героя
@@ -117,6 +133,12 @@ class TextInputBox(pygame.sprite.Sprite):
         return self.text
 
 
+def newrainbow():
+    for i in cat_group:
+        rain = Rainbow(i.rect.x, i.rect.y, 1)
+        rainbow.add(rain)
+
+
 def load_image(filname, colorkey=None):  # функция загрузки изображения
     fulname = os.path.join("data", filname)
     if not os.path.isfile(filname):
@@ -205,13 +227,19 @@ def play():
     screen = pygame.display.set_mode(size)
     t = True
     font = pygame.font.SysFont(None, 100)
-    cat = Cat(Image.open(CATS[NUM]))
+    cat = Cat(Image.open(CATS[NUM][0]))
     cat_group.add(cat)
     f = 0
     r = 0
     y = 0
     k = 0
     n = 0
+    for i in range(-30, 220, 30):
+        if i % 60 == 0:
+            rain = Rainbow(i, 306, 30)
+        else:
+            rain = Rainbow(i, 308, 30)
+        rainbow.add(rain)
     with Image.open('fon2.gif') as im:
         try:
             while 1:
@@ -256,10 +284,10 @@ def play():
         if time % 50 == 0:  # добавление очков
             score += 1
         time += 1
-        if score == 1000:
+        if score % 300 == 0:
             speed.change_v()
-            score = 0
         if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700:
+            cat.kill()
             score = 0
             time = 0
             speed.set_v()
@@ -276,7 +304,7 @@ def play():
             end_screen()
         if f != 0:
             r = r + 1
-            if r == 5:
+            if r == 3:
                 cat_group.update(f)
                 r = 0
         screen.blit(fon, (0, 0))
@@ -284,11 +312,13 @@ def play():
         tiles_group.update()
         things_group.draw(screen)
         things_group.update()
+        rainbow.update(cat.rect.x, cat.rect.y)
+        rainbow.draw(screen)
         cat_group.update(0)
         cat_group.draw(screen)
         text = FONT.render(str(score), True, PINK)
         screen.blit(text, (650, 100))
-        pygame.display.flip()
+        pygame.display.update()
 
 
 def add_platform():  # функция добавления платформы
@@ -427,7 +457,8 @@ def setting():
     t = True
     i = 0
     k = 0
-    with Image.open(CATS[NUM]) as im:
+    font = pygame.font.SysFont(None, 100)
+    with Image.open(CATS[NUM][0]) as im:
         im.seek(i)
         im.save('new.png')
         try:
@@ -436,14 +467,25 @@ def setting():
                 k += 1
         except EOFError:
             pass
+    buy = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((370, 620), (200, 65)),
+                                       text='Купить', manager=manager)
     while t:
-        with Image.open(CATS[NUM]) as im:
+        with Image.open(CATS[NUM][0]) as im:
             im.seek(i)
             im.save('new.png')
         i += 1
         i %= k
         screen.blit(fon, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load('new.png'), (300, 250)), (300, 180))
+        if CATS[NUM][1] == 0 and buy == 0:
+            buy = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((370, 620), (200, 65)),
+                                               text='Купить', manager=manager)
+        elif CATS[NUM][1] == 1 and buy != 0:
+            buy.kill()
+            buy = 0
+        if CATS[NUM][1] == 0:
+            text = FONT.render(f'{NUM * 15} coins', True, PINK)
+            screen.blit(text, (650, 100))
         manager.update(FPS)
         manager.draw_ui(screen)
         pygame.display.flip()
@@ -458,7 +500,7 @@ def setting():
                         NUM %= 10
                         k = 0
                         i = 0
-                        with Image.open(CATS[NUM]) as im:
+                        with Image.open(CATS[NUM][0]) as im:
                             try:
                                 while 1:
                                     im.seek(k)
@@ -516,6 +558,7 @@ tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
 game_over_group = pygame.sprite.Group()
+rainbow = pygame.sprite.Group()
 things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
 things_names_t1 = ['coin', 'money']
 fon_1 = load_image('fon_sky.jpg')
