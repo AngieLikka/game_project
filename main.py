@@ -395,7 +395,6 @@ def play():
                         (cur.execute("""SELECT allmoney FROM users WHERE id = ?""", (user, )).fetchall()[0][0] + coin,
                          user,)).fetchall()
             con.commit()
-            print(coin, cur.execute("""SELECT allmoney FROM users WHERE id = ?""", (user, )).fetchall()[0][0])
             fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
             screen.blit(fon, (0, 0))
             t1 = font.render('Игра окончена!', True, WHITE)
