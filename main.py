@@ -255,6 +255,8 @@ def play():
                 i.kill()
         if time % 50 == 0:  # добавление очков
             score += 1
+        text = FONT.render(str(score), True, PINK)
+        screen.blit(text, (100, 650))
         time += 1
         if score == 1000:
             speed.change_v()
@@ -279,15 +281,12 @@ def play():
             if r == 5:
                 cat_group.update(f)
                 r = 0
-        screen.blit(fon, (0, 0))
         tiles_group.draw(screen)  # отрисовка и обновление спрайтов
         tiles_group.update()
         things_group.draw(screen)
         things_group.update()
         cat_group.update(0)
         cat_group.draw(screen)
-        text = FONT.render(str(score), True, PINK)
-        screen.blit(text, (650, 100))
         pygame.display.flip()
 
 
