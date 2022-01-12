@@ -667,8 +667,8 @@ try:
     try:
         r = result[0]
     except:
-        r = -1
-    if r == -1:
+        r = 1
+    if r == 1:
         cur.execute("""INSERT INTO users(name, password, maxroad, allmoney) VALUES(?, ?, ?, ?)""",
                     (login, password, 0, 0)).fetchall()
         cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
