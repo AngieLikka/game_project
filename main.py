@@ -1,4 +1,5 @@
 import os
+import random
 import sys
 import pygame_gui
 import sqlite3
@@ -9,7 +10,6 @@ from tiles_class import Tiles
 from things_class import Things
 from random import randint
 from speed_class import Speed
-
 pygame.init()
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
@@ -18,8 +18,74 @@ clock = pygame.time.Clock()
 FPS = 60
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
-CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif", 5: "cat6.gif",
-        6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
+coin = 0
+CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif",
+        5: "cat6.gif", 6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
+
+
+class BadCat(pygame.sprite.Sprite):
+    def __init__(self, y, *groups):
+        super().__init__(*groups)
+        self.photo = Image.open('evil.gif')
+        self.num = 0
+        self.i = 0
+        try:
+            while 1:
+                self.photo.seek(self.num)
+                self.num += 1
+        except EOFError:
+            pass
+        self.photo.seek(self.i)
+        self.photo.save('newe.png')
+        self.image = pygame.transform.scale(pygame.image.load('newe.png'), (80, 55))
+        self.rect = self.image.get_rect()
+        self.rect.x = 900
+        self.rect.y = y
+        self.g = 1
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def peresec(self):
+        for i in cat_group:
+            return pygame.sprite.collide_mask(self, i)
+
+    def update(self, n, *args):
+        if self.g == self.num * 10:
+            self.photo.seek(self.i)
+            self.photo.save('newe.png')
+            self.i += 1
+            self.i %= self.num
+            self.image = pygame.transform.scale(pygame.image.load('newe.png'), (80, 55))
+            self.g = 0
+        self.g += 1
+        if n == 0:
+            self.rect = self.rect.move(-2, 0)
+
+
+class RainbowBAD(pygame.sprite.Sprite):
+    def __init__(self, x, y, *groups):
+        super().__init__(*groups)
+        self.image = pygame.transform.scale(pygame.image.load('rainbowbad.jpg'), (30, 40))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self, *args):
+        self.rect.x = self.rect.x - 2
+
+
+class Rainbow(pygame.sprite.Sprite):
+    def __init__(self, x, y, z, *groups):
+        super().__init__(*groups)
+        self.image = pygame.transform.scale(pygame.image.load('rainbow.jpg'), (z, 40))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+    def update(self, x, y, *args):
+        self.rect.x = self.rect.x - 1
+        if self.rect.x <= -20:
+            self.rect.x = x + 5
+            self.rect.y = y + random.randint(1, 3)
 
 
 class Cat(pygame.sprite.Sprite):  # класс героя
@@ -44,7 +110,8 @@ class Cat(pygame.sprite.Sprite):  # класс героя
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, n, *args):
-        if self.g == self.num * 23:
+        global coin
+        if self.g == self.num * 5:
             self.photo.seek(self.i)
             self.photo.save('new.png')
             self.i += 1
@@ -57,15 +124,20 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             if pygame.sprite.collide_mask(self, i):
                 if i.rect.x - 13 <= self.rect.x + self.rect.width <= i.rect.x + 13:
                     self.rect = self.rect.move(-1, 0)
-                else:
+                if i.rect.y - 50 <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
                     flag = False
                     break
+                if i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
+                    flag = False
+                    break
+        if flag:
+            self.rect = self.rect.move(0, n)
         for i in things_group:
             if pygame.sprite.collide_mask(self, i):
                 i.kill()
+                return 1
             # надо удалить объект и добавить какую-то циферку к сумме баллов
-        if flag:
-            self.rect = self.rect.move(0, n)
+
 
 
 PINK = (255, 0, 255)
@@ -112,6 +184,12 @@ class TextInputBox(pygame.sprite.Sprite):
 
     def get(self):
         return self.text
+
+
+def newrainbow():
+    for i in cat_group:
+        rain = Rainbow(i.rect.x, i.rect.y, 1)
+        rainbow.add(rain)
 
 
 def load_image(filname, colorkey=None):  # функция загрузки изображения
@@ -199,6 +277,7 @@ def start_screen():
 
 def play():
     global time, score
+    coin = 0
     screen = pygame.display.set_mode(size)
     t = True
     font = pygame.font.SysFont(None, 100)
@@ -207,8 +286,32 @@ def play():
     f = 0
     r = 0
     y = 0
+    k = 0
     n = 0
+    bad = 0
+    main_f = False
+    for i in range(-30, 220, 30):
+        if i % 60 == 0:
+            rain = Rainbow(i, 306, 30)
+        else:
+            rain = Rainbow(i, 308, 30)
+        rainbow.add(rain)
+    with Image.open('fon2.gif') as im:
+        try:
+            while 1:
+                im.seek(k)
+                k += 1
+        except EOFError:
+            pass
     while t:
+        if n == 25:
+            with Image.open('fon2.gif') as im:
+                im.seek(y)
+                im.save('newf.png')
+            y += 1
+            y %= k
+            n = 0
+        n += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -223,7 +326,7 @@ def play():
                     f = 0
                 if event.key == pygame.K_UP:
                     f = 0
-        fon = pygame.transform.scale(fon_1, (W, H))
+        fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
         generate_platforms()
         for i in tiles_group:
@@ -236,18 +339,62 @@ def play():
                 i.kill()
         if time % 50 == 0:  # добавление очков
             score += 1
-        text = FONT.render(str(score), True, PINK)
-        screen.blit(text, (100, 650))
         time += 1
-        if score > 500:
+        if time % 9000 == 8000:
+            bad = BadCat(random.randint(0, 620))
+            bad_cat.add(bad)
+            for i in range(960, 2080, 30):
+                if i % 60 == 0:
+                    rr = RainbowBAD(i, bad.rect.y + 1)
+                else:
+                    rr = RainbowBAD(i, bad.rect.y - 1)
+                rainbow_bad.add(rr)
+        if score % 300 == 0:
             speed.change_v()
-        if score == 1000:
+        if bad != 0 and bad.rect.x <= -82:
+            bad.kill()
+            bad = 0
+        for i in rainbow_bad:
+            if i.rect.x <= - 30:
+                i.kill()
+        if bad != 0:
+            bad.update(0)
+        if f != 0:
+            r = r + 1
+            if r == 3:
+                cat_group.update(f)
+                r = 0
+        if bad != 0:
+            main_f = bad.peresec()
+        screen.blit(fon, (0, 0))
+        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
+        tiles_group.update()
+        things_group.draw(screen)
+        things_group.update()
+        rainbow_bad.update()
+        rainbow_bad.draw(screen)
+        bad_cat.update(1)
+        bad_cat.draw(screen)
+        rainbow.update(cat.rect.x, cat.rect.y)
+        rainbow.draw(screen)
+        cat_group.update(0)
+        cat_group.draw(screen)
+        if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700 or main_f:
+            if bad != 0:
+                bad.kill()
+                for i in rainbow_bad:
+                    i.kill()
+            cat.kill()
             score = 0
             time = 0
             speed.set_v()
             tiles_group.empty()
             things_group.empty()
             t = False
+            cur.execute("UPDATE users SET allmoney = ? WHERE id = ?",
+                        (cur.execute("""SELECT allmoney FROM users WHERE id = ?""", (user, )).fetchall()[0][0] + coin,
+                         user,)).fetchall()
+            con.commit()
             fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
             screen.blit(fon, (0, 0))
             t1 = font.render('Игра окончена!', True, WHITE)
@@ -256,18 +403,9 @@ def play():
             screen.blit(t2, (200, 500))
             pygame.display.flip()
             end_screen()
-        if f != 0:
-            r = r + 1
-            if r == 7:
-                cat_group.update(f)
-                r = 0
-        tiles_group.draw(screen)  # отрисовка и обновление спрайтов
-        tiles_group.update()
-        things_group.draw(screen)
-        things_group.update()
-        cat_group.update(0)
-        cat_group.draw(screen)
-        pygame.display.flip()
+        text = FONT.render(str(score), True, PINK)
+        screen.blit(text, (650, 100))
+        pygame.display.update()
 
 
 def add_platform():  # функция добавления платформы
@@ -406,6 +544,7 @@ def setting():
     t = True
     i = 0
     k = 0
+    font = pygame.font.SysFont(None, 100)
     with Image.open(CATS[NUM]) as im:
         im.seek(i)
         im.save('new.png')
@@ -415,6 +554,7 @@ def setting():
                 k += 1
         except EOFError:
             pass
+    buy = 0
     while t:
         with Image.open(CATS[NUM]) as im:
             im.seek(i)
@@ -423,6 +563,16 @@ def setting():
         i %= k
         screen.blit(fon, (0, 0))
         screen.blit(pygame.transform.scale(pygame.image.load('new.png'), (300, 250)), (300, 180))
+        result = cur.execute("""SELECT * FROM kittens WHERE id == ?""", (user,)).fetchall()
+        if result[0][NUM + 1] == 0 and buy == 0:
+            buy = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((370, 620), (200, 65)),
+                                               text='Купить', manager=manager)
+        elif result[0][NUM + 1] == 1 and buy != 0:
+            buy.kill()
+            buy = 0
+        if result[0][NUM + 1] == 0:
+            text = FONT.render(f'{NUM * 15} coins', True, PINK)
+            screen.blit(text, (650, 100))
         manager.update(FPS)
         manager.draw_ui(screen)
         pygame.display.flip()
@@ -445,6 +595,8 @@ def setting():
                             except EOFError:
                                 pass
                     if event.ui_element == tomenu:
+                        if result[0][NUM + 1] == 0:
+                            NUM = 0
                         t = False
                         menu()
             manager.process_events(event)
@@ -495,6 +647,9 @@ tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
 game_over_group = pygame.sprite.Group()
+bad_cat = pygame.sprite.Group()
+rainbow = pygame.sprite.Group()
+rainbow_bad = pygame.sprite.Group()
 things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
 things_names_t1 = ['coin', 'money']
 fon_1 = load_image('fon_sky.jpg')
@@ -512,16 +667,27 @@ try:
     if len(result) == 0:
         cur.execute("""INSERT INTO users(name, password, maxroad, allmoney) VALUES(?, ?, ?, ?)""",
                     (login, password, 0, 0)).fetchall()
-        user = (login, password, 0, 0)
+        cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
+                    "VALUES(?, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)",
+                    (cur.execute("""SELECT id FROM users WHERE name == ? AND password == ?""",
+                                (login, password)).fetchall()[0],)).fetchall()
+        result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
+        user = result[0][0]
         con.commit()
     else:
-        user = result[0]
+        user = result[0][0]
 except:
     cur.execute('CREATE TABLE users ( id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT,'
                 ' password TEXT, maxroad INTEGER, allmoney INTEGER)')
     cur.execute("INSERT INTO users(name, password, maxroad, allmoney) "
                 "VALUES(?, ?, ?, ?)", (login, password, 0, 0)).fetchall()
-    user = (login, password, 0, 0)
+    cur.execute('CREATE TABLE kittens (id INTEGER PRIMARY KEY UNIQUE NOT NULL, cat0 INTEGER,  cat1 INTEGER,'
+                ' cat2 INTEGER, cat3 INTEGER, cat4 INTEGER, cat5 INTEGER, cat6 INTEGER, cat7 INTEGER, cat8 INTEGER,'
+                ' cat9 INTEGER)')
+    cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
+                "VALUES(0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)").fetchall()
+    user = 0
     con.commit()
+
 menu()
 pygame.quit()
