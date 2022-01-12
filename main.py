@@ -676,6 +676,7 @@ try:
         con.commit()
     else:
         user = result[0][0]
+        print(0)
 except:
     cur.execute('CREATE TABLE users ( id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT,'
                 ' password TEXT, maxroad INTEGER, allmoney INTEGER)')
