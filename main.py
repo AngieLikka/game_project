@@ -664,13 +664,17 @@ con = sqlite3.connect("nyan.db")
 cur = con.cursor()
 try:
     result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
-    if len(result) == 0:
+    try:
+        r = result[0]
+    except:
+        r = -1
+    if r == -1:
         cur.execute("""INSERT INTO users(name, password, maxroad, allmoney) VALUES(?, ?, ?, ?)""",
                     (login, password, 0, 0)).fetchall()
         cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
                     "VALUES(?, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)",
                     (cur.execute("""SELECT id FROM users WHERE name == ? AND password == ?""",
-                                (login, password)).fetchall()[0],)).fetchall()
+                                (login, password)).fetchall()[0][0],)).fetchall()
         result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
         user = result[0][0]
         con.commit()
