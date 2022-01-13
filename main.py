@@ -526,7 +526,6 @@ def records():
     tofinal = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                            text='Назад', manager=manager)
     res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(7)
-    text = ['Игрок    Максимальный путь     Количество монет']
     text_player = ['Игрок']
     text_maxroad = ['Максимальный путь']
     text_money = ['Количество монет']
@@ -561,7 +560,7 @@ def records():
                 r = False
                 terminate()
             if event.type == pygame.USEREVENT:
-                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == tofinal:
                         r = False
                         final_menu()
