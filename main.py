@@ -146,6 +146,7 @@ class Cat(pygame.sprite.Sprite):  # класс героя
 
 PINK = (255, 0, 255)
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 time = 0
 score = 0
 v = 100
@@ -640,6 +641,51 @@ def setting():
         clock.tick(10)
 
 
+def rules():
+    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    screen.blit(fon, (0, 0))
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 640), (200, 50)),
+                                          text='В меню', manager=manager)
+    text = ['Добро пожаловать в аналог игры Nyan Cat!', 'Правила:',
+            '- Вы играете за котика! Вы можете выбрать разных героев в настройках',
+            '- Котик управляется стрелками "вверх-вних" на клавиатуре',
+            '- Ваша задача: пролететь как можно больше нян-метров и заработать как можно больше монет',
+            '- Монеты даются за собирание разных предметов на платформах',
+            '- Количество заработанных монет в конце игры будет делится на 10, чтобы играть было веселее :)',
+            '- За монеты Bы можете купить новых героев', '- Кстати, у каждого героя свои предметы!',
+            '- Осторожно! Вам будут мешать злые котики! Не попадайтесь у них на пути!',
+            '- После окончания игры Вы сможете посмотреть свой личный результат и рекорды других игроков',
+            'Удачной игры!']
+    text_coord = 30
+    show_text = False
+    t = True
+    while t:
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        if not show_text:
+            for line in text:
+                l = FONT.render(line, True, BLACK)
+                l_rect = l.get_rect()
+                text_coord += 15
+                l_rect.top = text_coord
+                l_rect.x = 30
+                text_coord += l_rect.height
+                screen.blit(l, l_rect)
+                show_text = True
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+            manager.process_events(event)
+            pygame.display.flip()
+
+
 def menu():
     screen = pygame.display.set_mode(size)
     manager = pygame_gui.UIManager((W, H))
@@ -647,6 +693,8 @@ def menu():
                                           text='Играть', manager=manager)
     settings = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 540), (200, 85)),
                                             text='Настройки', manager=manager)
+    torules = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 50),(200, 85)),
+                                         text='Правила', manager=manager)
     i = 0
     t = True
     while t:
@@ -673,6 +721,9 @@ def menu():
                     if event.ui_element == settings:
                         t = False
                         setting()
+                    if event.ui_element == torules:
+                        t = False
+                        rules()
             manager.process_events(event)
 
 
