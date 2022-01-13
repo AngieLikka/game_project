@@ -22,6 +22,7 @@ FPS = 60
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
 coin = 0
+new_record = False
 CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif",
         5: "cat6.gif", 6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
 
@@ -280,7 +281,8 @@ def start_screen():
 
 
 def play():
-    global time, score, coin
+    global time, score, coin, new_record
+    new_record = False
     coin = 0
     screen = pygame.display.set_mode(size)
     t = True
@@ -396,10 +398,11 @@ def play():
             things_group.empty()
             t = False
             cur.execute("UPDATE users SET allmoney = ? WHERE id = ?",
-                        (cur.execute("""SELECT allmoney FROM users WHERE id = ?""", (user,)).fetchall()[0][0] + coin,
-                         user,)).fetchall()
+                        (cur.execute("""SELECT allmoney FROM users WHERE id = ?""",
+                                     (user,)).fetchall()[0][0] + coin // 10, user,)).fetchall()
             mr = cur.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
             if score > int(*mr):
+                new_record = True
                 cur.execute("""UPDATE users SET maxroad = ? WHERE name = ?""", [score, login])
             con.commit()
             fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
@@ -454,17 +457,6 @@ def generate_platforms():
 
 
 def end_screen():
-    text = ['Игра окончена!', '', '', '', '', '', '', 'Для продолжения нажмите любую клавишу']
-    fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
-    screen.blit(fon, (0, 0))
-    text_coord = 200
-    for line in text:
-        l = FONT.render(line, True, WHITE)
-        l_rect = l.get_rect()
-        text_coord += 100
-        l_rect.top = text_coord
-        l_rect.x = 300
-        screen.blit(l, l_rect)
     r = True
     while r:
         for event in pygame.event.get():
@@ -485,9 +477,13 @@ def final_menu():
     toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                           text='Играть', manager=manager)
     req = con.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
-    text = ['Пройденное расстояние: ' + str(score), 'Полученные монеты: ' + str(coin),
+    text = ['Пройденное расстояние: ' + str(score), 'Полученные монеты: ' + str(coin // 10),
             'Максимальное пройденное расстояние: ' + str(req[0])]
-    text_coord = 100
+    font = pygame.font.SysFont(None, 100)
+    record_text = font.render('', True, WHITE)
+    if new_record:
+        record_text = font.render('Новый рекорд!', True, WHITE)
+    text_coord = 200
     t = True
     show_text = False
     fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
@@ -496,12 +492,13 @@ def final_menu():
         manager.update(FPS)
         manager.draw_ui(screen)
         if not show_text:
+            screen.blit(record_text, (300, 100))
             for line in text:
                 l = FONT.render(line, True, WHITE)
                 l_rect = l.get_rect()
                 text_coord += 15
                 l_rect.top = text_coord
-                l_rect.x = 250
+                l_rect.x = 300
                 text_coord += l_rect.height
                 screen.blit(l, l_rect)
                 show_text = True
@@ -528,23 +525,37 @@ def records():
     manager = pygame_gui.UIManager((W, H))
     tofinal = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                            text='Назад', manager=manager)
-    res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(15)
-    text = res
+    res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(7)
+    text = ['Игрок    Максимальный путь     Количество монет']
+    text_player = ['Игрок']
+    text_maxroad = ['Максимальный путь']
+    text_money = ['Количество монет']
+    for i in res:
+        text_player.append(str(i[0]))
+        text_maxroad.append(str(i[1]))
+        text_money.append(str(i[2]))
+    font = pygame.font.SysFont(None, 40)
     r = True
     while r:
         fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
         screen.blit(fon, (0, 0))
-        text_c = 100
+        text_c = 70
+        for line in range(len(text_player)):
+            l_p = font.render(text_player[line], True, WHITE)
+            lp_rect = l_p.get_rect()
+            l_mr = font.render(text_maxroad[line], True, WHITE)
+            lmr_rect = l_mr.get_rect()
+            l_m = font.render(text_money[line], True, WHITE)
+            lm_rect = l_m.get_rect()
+            text_c += 15
+            lp_rect.top, lmr_rect.top, lm_rect.top = text_c, text_c, text_c
+            lp_rect.x, lmr_rect.x, lm_rect.x = 50, 250, 550
+            text_c += lp_rect.height
+            screen.blit(l_p, lp_rect)
+            screen.blit(l_mr, lmr_rect)
+            screen.blit(l_m, lm_rect)
         manager.update(FPS)
         manager.draw_ui(screen)
-        for line in text:
-            l = FONT.render(line, True, WHITE)
-            l_rect = l.get_rect()
-            text_c += 15
-            l_rect.top = text_c
-            l_rect.x = 200
-            text_c += l_rect.height
-            screen.blit(l, l_rect)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 r = False
