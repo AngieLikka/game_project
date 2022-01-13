@@ -686,6 +686,74 @@ def rules():
             pygame.display.flip()
 
 
+def music():
+    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    screen.blit(fon, (0, 0))
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 640), (200, 50)),
+                                          text='В меню', manager=manager)
+    nyancat = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 100), (200, 50)),
+                                           text='Выбрать', manager=manager)
+    vagner = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 170), (200, 50)),
+                                          text='Выбрать', manager=manager)
+    illusion = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 240), (200, 50)),
+                                            text='Выбрать', manager=manager)
+    gala = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 310), (200, 50)),
+                                        text='Выбрать', manager=manager)
+    lty = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 380), (200, 50)),
+                                       text='Выбрать', manager=manager)
+    lalala = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 450), (200, 50)),
+                                          text='Выбрать', manager=manager)
+    text = ['Здесь Вы можете выбрать музыку для игры', 'Nyan Cat', 'Вагнер - Полёт Валькирий',
+            'Benny Benassi — Illusion', 'Gala — Freed From Desire', 'James Blake — Limit to Your Love',
+            'Naughty Boy — La La La']
+    text_coord = 0
+    show_text = False
+    t = True
+    while t:
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        if not show_text:
+            for line in text:
+                l = FONT.render(line, True, BLACK)
+                l_rect = l.get_rect()
+                text_coord += 52
+                l_rect.top = text_coord
+                l_rect.x = 300
+                text_coord += l_rect.height
+                screen.blit(l, l_rect)
+                show_text = True
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+                    if event.ui_element == nyancat:
+                        pygame.mixer.music.load('Nyan Cat.mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == vagner:
+                        pygame.mixer.music.load('Вагнер - Полет Валькирий (megasongs.net).mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == illusion:
+                        pygame.mixer.music.load('Benny Benassi — Illusion (feat. Sandy).mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == gala:
+                        pygame.mixer.music.load('Gala — Freed From Desire (MaxiGroove.mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == lty:
+                        pygame.mixer.music.load('James Blake — Limit to Your Love.mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == lalala:
+                        pygame.mixer.music.load('Naughty Boy — La La La (Feat. Sam Smith).mp3')
+                        pygame.mixer.music.play(-1)
+            manager.process_events(event)
+            pygame.display.flip()
+
+
 def menu():
     screen = pygame.display.set_mode(size)
     manager = pygame_gui.UIManager((W, H))
@@ -693,8 +761,10 @@ def menu():
                                           text='Играть', manager=manager)
     settings = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 540), (200, 85)),
                                             text='Настройки', manager=manager)
-    torules = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 50),(200, 85)),
-                                         text='Правила', manager=manager)
+    torules = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 50), (200, 85)),
+                                           text='Правила', manager=manager)
+    tomusic = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 50), (200, 85)),
+                                           text='Музыка', manager=manager)
     i = 0
     t = True
     while t:
@@ -724,6 +794,9 @@ def menu():
                     if event.ui_element == torules:
                         t = False
                         rules()
+                    if event.ui_element == tomusic:
+                        t = False
+                        music()
             manager.process_events(event)
 
 
