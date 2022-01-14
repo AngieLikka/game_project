@@ -10,6 +10,9 @@ from tiles_class import Tiles
 from things_class import Things
 from random import randint
 from speed_class import Speed
+from text import TextInputBox
+from rainbow import RainbowBAD, Rainbow
+from cat import BadCat
 
 pygame.init()
 pygame.mixer.music.load('Nyan Cat.mp3')
@@ -25,71 +28,13 @@ coin = 0
 new_record = False
 CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif",
         5: "cat6.gif", 6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
-
-
-class BadCat(pygame.sprite.Sprite):
-    def __init__(self, y, *groups):
-        super().__init__(*groups)
-        self.photo = Image.open('evil.gif')
-        self.num = 0
-        self.i = 0
-        try:
-            while 1:
-                self.photo.seek(self.num)
-                self.num += 1
-        except EOFError:
-            pass
-        self.photo.seek(self.i)
-        self.photo.save('newe.png')
-        self.image = pygame.transform.scale(pygame.image.load('newe.png'), (80, 55))
-        self.rect = self.image.get_rect()
-        self.rect.x = 900
-        self.rect.y = y
-        self.g = 1
-        self.mask = pygame.mask.from_surface(self.image)
-
-    def peresec(self):
-        for i in cat_group:
-            return pygame.sprite.collide_mask(self, i)
-
-    def update(self, n, *args):
-        if self.g == self.num * 10:
-            self.photo.seek(self.i)
-            self.photo.save('newe.png')
-            self.i += 1
-            self.i %= self.num
-            self.image = pygame.transform.scale(pygame.image.load('newe.png'), (80, 55))
-            self.g = 0
-        self.g += 1
-        if n == 0:
-            self.rect = self.rect.move(-2, 0)
-
-
-class RainbowBAD(pygame.sprite.Sprite):
-    def __init__(self, x, y, *groups):
-        super().__init__(*groups)
-        self.image = pygame.transform.scale(pygame.image.load('rainbowbad.jpg'), (30, 40))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
-    def update(self, *args):
-        self.rect.x = self.rect.x - 2
-
-
-class Rainbow(pygame.sprite.Sprite):
-    def __init__(self, x, y, z, *groups):
-        super().__init__(*groups)
-        self.image = pygame.transform.scale(pygame.image.load('rainbow.jpg'), (z, 40))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-
-    def update(self, x, y, *args):
-        self.rect.x = self.rect.x - 1
-        if self.rect.x <= -20:
-            self.rect.x = x + 5
-            self.rect.y = y + random.randint(1, 3)
+PINK = (255, 0, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+time = 0
+score = 0
+v = 100
+speed = Speed(v)
 
 
 class Cat(pygame.sprite.Sprite):  # класс героя
@@ -142,59 +87,6 @@ class Cat(pygame.sprite.Sprite):  # класс героя
                 coin += 1
                 return 1
             # надо удалить объект и добавить какую-то циферку к сумме баллов
-
-
-PINK = (255, 0, 255)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-time = 0
-score = 0
-v = 100
-speed = Speed(v)
-
-
-class TextInputBox(pygame.sprite.Sprite):
-    def __init__(self, x, y, w, font):
-        super().__init__()
-        self.color = (255, 255, 255)
-        self.backcolor = None
-        self.pos = (x, y)
-        self.width = w
-        self.font = font
-        self.active = False
-        self.text = ""
-        self.render_text()
-
-    def render_text(self):
-        t_surf = self.font.render(self.text, True, self.color, self.backcolor)
-        self.image = pygame.Surface((max(self.width, t_surf.get_width() + 10), 25), pygame.SRCALPHA)
-        if self.backcolor:
-            self.image.fill(self.backcolor)
-        self.image.blit(t_surf, (5, 5))
-        pygame.draw.rect(self.image, self.color, self.image.get_rect().inflate(-2, -2), 2)
-        self.rect = self.image.get_rect(topleft=self.pos)
-
-    def update(self, event_list):
-        for event in event_list:
-            if event.type == pygame.MOUSEBUTTONDOWN and not self.active:
-                self.active = self.rect.collidepoint(event.pos)
-            if event.type == pygame.KEYDOWN and self.active:
-                if event.key == pygame.K_RETURN:
-                    self.active = False
-                elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                self.render_text()
-
-    def get(self):
-        return self.text
-
-
-def newrainbow():
-    for i in cat_group:
-        rain = Rainbow(i.rect.x, i.rect.y, 1)
-        rainbow.add(rain)
 
 
 def load_image(filname, colorkey=None):  # функция загрузки изображения
@@ -637,6 +529,13 @@ def setting():
                             NUM = 0
                         t = False
                         menu()
+                    if buy != 0 and event.ui_element == buy:
+                        coin = cur.execute("""SELECT allmoney FROM users WHERE id == ?""", (user,)).fetchall()[0][0]
+                        if coin >= NUM * 15:
+                            cur.execute("""UPDATE users SET allmoney = ? WHERE id = ?""",
+                                        (coin - NUM * 15, user,)).fetchall()
+                            cur.execute(f"UPDATE kittens SET cat{NUM} = 1 WHERE id = {user}").fetchall()
+                            con.commit()
             manager.process_events(event)
         clock.tick(10)
 
@@ -844,27 +743,27 @@ try:
     except:
         r = -1
     if r == -1:
-        r = 1
-    if r == 1:
         cur.execute("""INSERT INTO users(name, password, maxroad, allmoney) VALUES(?, ?, ?, ?)""",
                     (login, password, 0, 0)).fetchall()
-        cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
-                    "VALUES(?, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)",
-                    (cur.execute("""SELECT id FROM users WHERE name == ? AND password == ?""",
-                                 (login, password)).fetchall()[0][0],)).fetchall()
+        con.commit()
         result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
-        user = result[0][0]
+        r = result[0][0]
+        cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
+                    "VALUES(?, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)", (r,)).fetchall()
+        user = r
         con.commit()
     else:
         user = result[0][0]
 except:
     cur.execute('CREATE TABLE users ( id INTEGER PRIMARY KEY UNIQUE NOT NULL, name TEXT,'
                 ' password TEXT, maxroad INTEGER, allmoney INTEGER)')
-    cur.execute("INSERT INTO users(name, password, maxroad, allmoney) "
-                "VALUES(?, ?, ?, ?)", (login, password, 0, 0)).fetchall()
-    cur.execute('CREATE TABLE kittens (id INTEGER PRIMARY KEY UNIQUE NOT NULL, cat0 INTEGER,  cat1 INTEGER,'
-                ' cat2 INTEGER, cat3 INTEGER, cat4 INTEGER, cat5 INTEGER, cat6 INTEGER, cat7 INTEGER, cat8 INTEGER,'
-                ' cat9 INTEGER)')
+    cur.execute('CREATE TABLE kittens (id PRIMARY KEY REFERENCES users (id) UNIQUE NOT NULL, '
+                'cat0 INTEGER DEFAULT (1), cat1 INTEGER DEFAULT (1), cat2 INTEGER DEFAULT (0), '
+                'cat3 INTEGER DEFAULT (0), cat4 INTEGER DEFAULT (0), cat5 INTEGER DEFAULT (0), '
+                'cat6 INTEGER DEFAULT (0), cat7 INTEGER DEFAULT (0), cat8 INTEGER DEFAULT (0), '
+                'cat9 INTEGER DEFAULT (0))')
+    cur.execute("INSERT INTO users(id, name, password, maxroad, allmoney) "
+                "VALUES(0, ?, ?, ?, ?)", (login, password, 0, 0)).fetchall()
     cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
                 "VALUES(0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)").fetchall()
     user = 0
