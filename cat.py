@@ -1,7 +1,9 @@
 import pygame
 from PIL import Image
+
 bad_cat = pygame.sprite.Group()
 FPS = 60
+cat_group = pygame.sprite.Group()
 
 
 class BadCat(pygame.sprite.Sprite):

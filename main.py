@@ -306,9 +306,9 @@ def play():
             screen.blit(t2, (200, 500))
             pygame.display.flip()
             end_screen()
-        text = FONT.render(str(score), True, PINK)
+        text = FONT.render('Nyan метры: ' + str(score), True, PINK)
         screen.blit(text, (100, 650))
-        text = FONT.render(str(coin), True, PINK)
+        text = FONT.render('Собранные предметы: ' + str(coin), True, PINK)
         screen.blit(text, (100, 680))
         pygame.display.update()
 
@@ -471,10 +471,11 @@ def setting():
                                           text='В меню', manager=manager)
     next = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 600), (200, 85)),
                                         text='Следующий', manager=manager)
+    money = con.execute("""SELECT allmoney FROM users WHERE name = ?""", [login]).fetchone()
     t = True
     i = 0
     k = 0
-    font = pygame.font.SysFont(None, 100)
+    font = pygame.font.SysFont(None, 40)
     with Image.open(CATS[NUM]) as im:
         im.seek(i)
         im.save('new.png')
@@ -485,6 +486,7 @@ def setting():
         except EOFError:
             pass
     buy = 0
+    text_money = str(*money)
     while t:
         with Image.open(CATS[NUM]) as im:
             im.seek(i)
@@ -492,6 +494,8 @@ def setting():
         i += 1
         i %= k
         screen.blit(fon, (0, 0))
+        text_playermoney = font.render('Ваши монеты: {}'.format(text_money), True, BLACK)
+        screen.blit(text_playermoney, (350, 100))
         screen.blit(pygame.transform.scale(pygame.image.load('new.png'), (300, 250)), (300, 180))
         result = cur.execute("""SELECT * FROM kittens WHERE id == ?""", (user,)).fetchall()
         if result[0][NUM + 1] == 0 and buy == 0:
@@ -502,7 +506,7 @@ def setting():
             buy = 0
         if result[0][NUM + 1] == 0:
             text = FONT.render(f'{NUM * 15} coins', True, PINK)
-            screen.blit(text, (650, 100))
+            screen.blit(text, (370, 600))
         manager.update(FPS)
         manager.draw_ui(screen)
         pygame.display.flip()
@@ -532,8 +536,11 @@ def setting():
                     if buy != 0 and event.ui_element == buy:
                         coin = cur.execute("""SELECT allmoney FROM users WHERE id == ?""", (user,)).fetchall()[0][0]
                         if coin >= NUM * 15:
+                            print(1)
                             cur.execute("""UPDATE users SET allmoney = ? WHERE id = ?""",
                                         (coin - NUM * 15, user,)).fetchall()
+                            text_money = coin - NUM * 15
+                            pygame.display.flip()
                             cur.execute(f"UPDATE kittens SET cat{NUM} = 1 WHERE id = {user}").fetchall()
                             con.commit()
             manager.process_events(event)
