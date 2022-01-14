@@ -10,7 +10,10 @@ from tiles_class import Tiles
 from things_class import Things
 from random import randint
 from speed_class import Speed
+
 pygame.init()
+pygame.mixer.music.load('Nyan Cat.mp3')
+pygame.mixer.music.play(-1)
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
@@ -19,6 +22,7 @@ FPS = 60
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
 coin = 0
+new_record = False
 CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif",
         5: "cat6.gif", 6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
 
@@ -135,13 +139,14 @@ class Cat(pygame.sprite.Sprite):  # класс героя
         for i in things_group:
             if pygame.sprite.collide_mask(self, i):
                 i.kill()
+                coin += 1
                 return 1
             # надо удалить объект и добавить какую-то циферку к сумме баллов
 
 
-
 PINK = (255, 0, 255)
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 time = 0
 score = 0
 v = 100
@@ -196,6 +201,7 @@ def load_image(filname, colorkey=None):  # функция загрузки из�
     fulname = os.path.join("data", filname)
     if not os.path.isfile(filname):
         print('File is not found :(')
+        print(filname)
         sys.exit()
     image = pygame.image.load(fulname)
     if colorkey is not None:
@@ -276,13 +282,15 @@ def start_screen():
 
 
 def play():
-    global time, score
+    global time, score, coin, new_record
+    new_record = False
     coin = 0
     screen = pygame.display.set_mode(size)
     t = True
     font = pygame.font.SysFont(None, 100)
     cat = Cat(Image.open(CATS[NUM]))
     cat_group.add(cat)
+    score = 0
     f = 0
     r = 0
     y = 0
@@ -385,15 +393,18 @@ def play():
                 for i in rainbow_bad:
                     i.kill()
             cat.kill()
-            score = 0
             time = 0
             speed.set_v()
             tiles_group.empty()
             things_group.empty()
             t = False
             cur.execute("UPDATE users SET allmoney = ? WHERE id = ?",
-                        (cur.execute("""SELECT allmoney FROM users WHERE id = ?""", (user, )).fetchall()[0][0] + coin,
-                         user,)).fetchall()
+                        (cur.execute("""SELECT allmoney FROM users WHERE id = ?""",
+                                     (user,)).fetchall()[0][0] + coin // 10, user,)).fetchall()
+            mr = cur.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
+            if score > int(*mr):
+                new_record = True
+                cur.execute("""UPDATE users SET maxroad = ? WHERE name = ?""", [score, login])
             con.commit()
             fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
             screen.blit(fon, (0, 0))
@@ -404,7 +415,9 @@ def play():
             pygame.display.flip()
             end_screen()
         text = FONT.render(str(score), True, PINK)
-        screen.blit(text, (650, 100))
+        screen.blit(text, (100, 650))
+        text = FONT.render(str(coin), True, PINK)
+        screen.blit(text, (100, 680))
         pygame.display.update()
 
 
@@ -421,7 +434,7 @@ def add_platform():  # функция добавления платформы
 
 
 def add_thing(x, y):  # функция добавления вещей на платформы
-    thing = Things(x, y, things_names_t1, things_images_t1, speed)
+    thing = Things(x, y, things_names_all[NUM], things_images_all[NUM], speed)
     things_group.add(thing)
 
 
@@ -445,17 +458,6 @@ def generate_platforms():
 
 
 def end_screen():
-    text = ['Игра окончена!', '', '', '', '', '', '', 'Для продолжения нажмите любую клавишу']
-    fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
-    screen.blit(fon, (0, 0))
-    text_coord = 200
-    for line in text:
-        l = FONT.render(line, True, WHITE)
-        l_rect = l.get_rect()
-        text_coord += 100
-        l_rect.top = text_coord
-        l_rect.x = 300
-        screen.blit(l, l_rect)
     r = True
     while r:
         for event in pygame.event.get():
@@ -475,12 +477,32 @@ def final_menu():
                                              text='Таблица рекордов', manager=manager)
     toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                           text='Играть', manager=manager)
+    req = con.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
+    text = ['Пройденное расстояние: ' + str(score), 'Полученные монеты: ' + str(coin // 10),
+            'Максимальное пройденное расстояние: ' + str(req[0])]
+    font = pygame.font.SysFont(None, 100)
+    record_text = font.render('', True, WHITE)
+    if new_record:
+        record_text = font.render('Новый рекорд!', True, WHITE)
+    text_coord = 200
     t = True
+    show_text = False
+    fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
+    screen.blit(fon, (0, 0))
     while t:
-        fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
-        screen.blit(fon, (0, 0))
         manager.update(FPS)
         manager.draw_ui(screen)
+        if not show_text:
+            screen.blit(record_text, (300, 100))
+            for line in text:
+                l = FONT.render(line, True, WHITE)
+                l_rect = l.get_rect()
+                text_coord += 15
+                l_rect.top = text_coord
+                l_rect.x = 300
+                text_coord += l_rect.height
+                screen.blit(l, l_rect)
+                show_text = True
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
@@ -504,27 +526,42 @@ def records():
     manager = pygame_gui.UIManager((W, H))
     tofinal = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                            text='Назад', manager=manager)
-    res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(15)
-    text = list(res)
+    res = con.execute("""SELECT name, maxroad, allmoney FROM users ORDER BY maxroad DESC""").fetchmany(7)
+    text_player = ['Игрок']
+    text_maxroad = ['Максимальный путь']
+    text_money = ['Количество монет']
+    for i in res:
+        text_player.append(str(i[0]))
+        text_maxroad.append(str(i[1]))
+        text_money.append(str(i[2]))
+    font = pygame.font.SysFont(None, 40)
     r = True
     while r:
         fon = pygame.transform.scale(load_image('game_over.png'), (W, H))
         screen.blit(fon, (0, 0))
-        text_c = 100
-        for line in text:
-            l = FONT.render('     '.join(str(line)), True, WHITE)
-            l_rect = l.get_rect()
+        text_c = 70
+        for line in range(len(text_player)):
+            l_p = font.render(text_player[line], True, WHITE)
+            lp_rect = l_p.get_rect()
+            l_mr = font.render(text_maxroad[line], True, WHITE)
+            lmr_rect = l_mr.get_rect()
+            l_m = font.render(text_money[line], True, WHITE)
+            lm_rect = l_m.get_rect()
             text_c += 15
-            l_rect.top = text_c
-            l_rect.x = 200
-            text_c += l_rect.height
-            screen.blit(l, l_rect)
+            lp_rect.top, lmr_rect.top, lm_rect.top = text_c, text_c, text_c
+            lp_rect.x, lmr_rect.x, lm_rect.x = 50, 250, 550
+            text_c += lp_rect.height
+            screen.blit(l_p, lp_rect)
+            screen.blit(l_mr, lmr_rect)
+            screen.blit(l_m, lm_rect)
+        manager.update(FPS)
+        manager.draw_ui(screen)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 r = False
                 terminate()
             if event.type == pygame.USEREVENT:
-                if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
                     if event.ui_element == tofinal:
                         r = False
                         final_menu()
@@ -534,6 +571,7 @@ def records():
 
 def setting():
     global CATS, NUM
+    NUM = 0
     screen = pygame.display.set_mode(size)
     fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
     manager = pygame_gui.UIManager((W, H))
@@ -603,6 +641,119 @@ def setting():
         clock.tick(10)
 
 
+def rules():
+    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    screen.blit(fon, (0, 0))
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 640), (200, 50)),
+                                          text='В меню', manager=manager)
+    text = ['Добро пожаловать в аналог игры Nyan Cat!', 'Правила:',
+            '- Вы играете за котика! Вы можете выбрать разных героев в настройках',
+            '- Котик управляется стрелками "вверх-вних" на клавиатуре',
+            '- Ваша задача: пролететь как можно больше нян-метров и заработать как можно больше монет',
+            '- Монеты даются за собирание разных предметов на платформах',
+            '- Количество заработанных монет в конце игры будет делится на 10, чтобы играть было веселее :)',
+            '- За монеты Bы можете купить новых героев', '- Кстати, у каждого героя свои предметы!',
+            '- Осторожно! Вам будут мешать злые котики! Не попадайтесь у них на пути!',
+            '- После окончания игры Вы сможете посмотреть свой личный результат и рекорды других игроков',
+            'Удачной игры!']
+    text_coord = 30
+    show_text = False
+    t = True
+    while t:
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        if not show_text:
+            for line in text:
+                l = FONT.render(line, True, BLACK)
+                l_rect = l.get_rect()
+                text_coord += 15
+                l_rect.top = text_coord
+                l_rect.x = 30
+                text_coord += l_rect.height
+                screen.blit(l, l_rect)
+                show_text = True
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+            manager.process_events(event)
+            pygame.display.flip()
+
+
+def music():
+    fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
+    screen.blit(fon, (0, 0))
+    manager = pygame_gui.UIManager((W, H))
+    tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 640), (200, 50)),
+                                          text='В меню', manager=manager)
+    nyancat = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 100), (200, 50)),
+                                           text='Выбрать', manager=manager)
+    vagner = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 170), (200, 50)),
+                                          text='Выбрать', manager=manager)
+    illusion = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 240), (200, 50)),
+                                            text='Выбрать', manager=manager)
+    gala = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 310), (200, 50)),
+                                        text='Выбрать', manager=manager)
+    lty = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 380), (200, 50)),
+                                       text='Выбрать', manager=manager)
+    lalala = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 450), (200, 50)),
+                                          text='Выбрать', manager=manager)
+    text = ['Здесь Вы можете выбрать музыку для игры', 'Nyan Cat', 'Вагнер - Полёт Валькирий',
+            'Benny Benassi — Illusion', 'Gala — Freed From Desire', 'James Blake — Limit to Your Love',
+            'Naughty Boy — La La La']
+    text_coord = 0
+    show_text = False
+    t = True
+    while t:
+        manager.update(FPS)
+        manager.draw_ui(screen)
+        if not show_text:
+            for line in text:
+                l = FONT.render(line, True, BLACK)
+                l_rect = l.get_rect()
+                text_coord += 52
+                l_rect.top = text_coord
+                l_rect.x = 300
+                text_coord += l_rect.height
+                screen.blit(l, l_rect)
+                show_text = True
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                t = False
+                terminate()
+            if event.type == pygame.USEREVENT:
+                if event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+                    if event.ui_element == tomenu:
+                        t = False
+                        menu()
+                    if event.ui_element == nyancat:
+                        pygame.mixer.music.load('Nyan Cat.mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == vagner:
+                        pygame.mixer.music.load('Вагнер - Полет Валькирий (megasongs.net).mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == illusion:
+                        pygame.mixer.music.load('Benny Benassi — Illusion (feat. Sandy).mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == gala:
+                        pygame.mixer.music.load('Gala — Freed From Desire (MaxiGroove.mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == lty:
+                        pygame.mixer.music.load('James Blake — Limit to Your Love.mp3')
+                        pygame.mixer.music.play(-1)
+                    if event.ui_element == lalala:
+                        pygame.mixer.music.load('Naughty Boy — La La La (Feat. Sam Smith).mp3')
+                        pygame.mixer.music.play(-1)
+            manager.process_events(event)
+            pygame.display.flip()
+
+
 def menu():
     screen = pygame.display.set_mode(size)
     manager = pygame_gui.UIManager((W, H))
@@ -610,6 +761,10 @@ def menu():
                                           text='Играть', manager=manager)
     settings = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 540), (200, 85)),
                                             text='Настройки', manager=manager)
+    torules = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 50), (200, 85)),
+                                           text='Правила', manager=manager)
+    tomusic = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((670, 50), (200, 85)),
+                                           text='Музыка', manager=manager)
     i = 0
     t = True
     while t:
@@ -636,6 +791,12 @@ def menu():
                     if event.ui_element == settings:
                         t = False
                         setting()
+                    if event.ui_element == torules:
+                        t = False
+                        rules()
+                    if event.ui_element == tomusic:
+                        t = False
+                        music()
             manager.process_events(event)
 
 
@@ -646,19 +807,33 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
-game_over_group = pygame.sprite.Group()
 bad_cat = pygame.sprite.Group()
 rainbow = pygame.sprite.Group()
 rainbow_bad = pygame.sprite.Group()
-things_images_t1 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
-things_names_t1 = ['coin', 'money']
-fon_1 = load_image('fon_sky.jpg')
-things_images_t2 = {'milk': load_image('milk.png'), 'cookie': load_image('cookie.png')}
-things_names_t2 = ['milk', 'cookie']
-fon_2 = load_image('fon_village.jpg')
-things_images_t3 = {'candy': load_image('candy.png'), 'donut': load_image('donut.png')}
-things_names_t3 = ['candy', 'donut']
-fon_3 = load_image('fon_sweet.jpg')
+things_images_t0 = {'rainbow': load_image('rainbow.png', -1), 'cloud': load_image('cloud.png', -1)}
+things_names_t0 = ['rainbow', 'cloud']
+things_images_t1 = {'nut': load_image('nut.png', -1), 'nuts': load_image('nuts.jpg', -1)}
+things_names_t1 = ['nut', 'nuts']
+things_images_t2 = {'candy': load_image('candy.png'), 'donut': load_image('donut.png')}
+things_names_t2 = ['candy', 'donut']
+things_images_t3 = {'sandwitch': load_image('doner.png', -1), 'veg': load_image('vegetables.png', -1)}
+things_names_t3 = ['sandwitch', 'veg']
+things_images_t4 = {'molniia': load_image('molniia.png', -1), 'ball': load_image('ball.png', -1)}
+things_names_t4 = ['molniia', 'ball']
+things_images_t5 = {'coin': load_image('coin.jpg', -1), 'money': load_image('money.png', -1)}
+things_names_t5 = ['coin', 'money']
+things_images_t6 = {'lucky': load_image('lucky.png', -1), 'beer': load_image('beer.png', -1)}
+things_names_t6 = ['lucky', 'beer']
+things_images_t7 = {'bone': load_image('bone.png', -1), 'tako': load_image('tako.png', -1)}
+things_names_t7 = ['bone', 'tako']
+things_images_t8 = {'milk': load_image('milk.png'), 'cookie': load_image('cookie.png')}
+things_names_t8 = ['milk', 'cookie']
+things_images_t9 = {'sun': load_image('sun.png', -1), 'moon': load_image('moon.png')}
+things_names_t9 = ['sun', 'moon']
+things_names_all = [things_names_t0, things_names_t1, things_names_t2, things_names_t3, things_names_t4,
+                    things_names_t5, things_names_t6, things_names_t7, things_names_t8, things_names_t9]
+things_images_all = [things_images_t0, things_images_t1, things_images_t2, things_images_t3, things_images_t4,
+                     things_images_t5, things_images_t6, things_images_t7, things_images_t8, things_images_t9]
 login, password = start_screen()
 con = sqlite3.connect("nyan.db")
 cur = con.cursor()
@@ -667,6 +842,8 @@ try:
     try:
         r = result[0]
     except:
+        r = -1
+    if r == -1:
         r = 1
     if r == 1:
         cur.execute("""INSERT INTO users(name, password, maxroad, allmoney) VALUES(?, ?, ?, ?)""",
@@ -674,7 +851,7 @@ try:
         cur.execute("INSERT INTO kittens (id, cat0, cat1, cat2, cat3, cat4, cat5, cat6, cat7, cat8, cat9) "
                     "VALUES(?, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0)",
                     (cur.execute("""SELECT id FROM users WHERE name == ? AND password == ?""",
-                                (login, password)).fetchall()[0][0],)).fetchall()
+                                 (login, password)).fetchall()[0][0],)).fetchall()
         result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
         user = result[0][0]
         con.commit()
