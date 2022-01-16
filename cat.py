@@ -3,15 +3,15 @@ from PIL import Image
 
 bad_cat = pygame.sprite.Group()
 FPS = 60
-cat_group = pygame.sprite.Group()
 
 
 class BadCat(pygame.sprite.Sprite):
-    def __init__(self, y, *groups):
+    def __init__(self, y, help, *groups):
         super().__init__(*groups)
         self.photo = Image.open('evil.gif')
         self.num = 0
         self.i = 0
+        self.transfer = help
         try:
             while 1:
                 self.photo.seek(self.num)
@@ -28,7 +28,7 @@ class BadCat(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def peresec(self):
-        for i in cat_group:
+        for i in self.transfer.get_catgroup():
             return pygame.sprite.collide_mask(self, i)
 
     def update(self, n, *args):
