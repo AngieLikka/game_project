@@ -3,7 +3,6 @@ from random import choice
 import os
 import sys
 
-
 FPS = 60
 all_sprites = pygame.sprite.Group()
 

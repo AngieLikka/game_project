@@ -2,7 +2,7 @@ import pygame
 import random
 
 
-class RainbowBAD(pygame.sprite.Sprite):
+class RainbowBAD(pygame.sprite.Sprite):  # класс радуги плохого кота
     def __init__(self, x, y, help, *groups):
         super().__init__(*groups)
         self.image = pygame.transform.scale(pygame.image.load('rainbowbad.jpg'), (30, 40))
@@ -15,7 +15,7 @@ class RainbowBAD(pygame.sprite.Sprite):
         self.rect.x = self.rect.x - 2
 
 
-class Rainbow(pygame.sprite.Sprite):
+class Rainbow(pygame.sprite.Sprite):  # класс радуги главного кота
     def __init__(self, x, y, z, *groups):
         super().__init__(*groups)
         self.image = pygame.transform.scale(pygame.image.load('rainbow.jpg'), (z, 40))
@@ -28,4 +28,3 @@ class Rainbow(pygame.sprite.Sprite):
         if self.rect.x <= -20:
             self.rect.x = x + 5
             self.rect.y = y + random.randint(1, 3)
-

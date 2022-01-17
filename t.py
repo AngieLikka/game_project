@@ -1,4 +1,4 @@
-class Transfer:
+class Transfer:  # класс передачи групп спрайтов другим классам
     def __init__(self, tiles, things, cat):
         self.tiles = tiles
         self.things = things

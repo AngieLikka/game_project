@@ -62,7 +62,7 @@ def terminate():  # функция завершения игры
     sys.exit()
 
 
-def entry():
+def entry():  # функция окна входа
     login = TextInputBox(250, 160, 400, FONT)
     password = TextInputBox(250, 230, 400, FONT)
     group = pygame.sprite.Group(login, password)
@@ -100,7 +100,7 @@ def entry():
     return
 
 
-def start_screen():
+def start_screen():  # функция экрана заставки
     line = "Для продолжения нажмите на любую клавишу"
     fon = pygame.transform.scale(pygame.image.load('start.jpg'), (W, H))
     screen.blit(fon, (0, 0))
@@ -124,7 +124,7 @@ def start_screen():
         clock.tick(FPS)
 
 
-def play():
+def play():  # функция игры
     global time, score, new_record
     new_record = False
     coin.set_coins()
@@ -181,13 +181,13 @@ def play():
                     schetchik_1 = 0
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
-        generate_platforms()
+        generate_platforms()  # добавление платформ
         for i in tiles_group:
             if i.rect.x < 0:
                 add_platform()
-            if i.rect.x + i.rect.width < 0:
+            if i.rect.x + i.rect.width < 0:  # удаление платформ
                 i.kill()
-        for i in things_group:
+        for i in things_group:  # удаление предметов
             if i.rect.x + i.rect.width < 0:
                 i.kill()
         if time % 50 == 0:  # добавление очков
@@ -202,7 +202,7 @@ def play():
                 else:
                     rr = RainbowBAD(i, bad.rect.y - 1, transfer)
                 rainbow_bad.add(rr)
-        if score % 300 == 0:
+        if score % 300 == 0:  # изменение скорости платформ
             speed.change_v()
         if bad != 0 and bad.rect.x <= -82:
             bad.kill()
@@ -233,7 +233,7 @@ def play():
         cat_group.update(0)
         cat_group.draw(screen)
         if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700 or main_f:
-            if bad != 0:
+            if bad != 0:  # проигрыш
                 bad.kill()
                 for i in rainbow_bad:
                     i.kill()
@@ -247,7 +247,7 @@ def play():
                         (cur.execute("""SELECT allmoney FROM users WHERE id = ?""",
                                      (user,)).fetchall()[0][0] + coin.get_coins() // 10, user,)).fetchall()
             mr = cur.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
-            if score > int(*mr):
+            if score > int(*mr):  # запись нового рекорда
                 new_record = True
                 cur.execute("""UPDATE users SET maxroad = ? WHERE name = ?""", [score, login])
             con.commit()
@@ -259,7 +259,7 @@ def play():
             screen.blit(t2, (200, 500))
             pygame.display.flip()
             end_screen()
-        text = FONT.render('Nyan метры: ' + str(score), True, PINK)
+        text = FONT.render('Nyan метры: ' + str(score), True, PINK)  # вывод очков
         screen.blit(text, (100, 650))
         text = FONT.render('Собранные предметы: ' + str(coin.get_coins()), True, PINK)
         screen.blit(text, (100, 680))
@@ -302,7 +302,7 @@ def generate_platforms():
             add_platform()
 
 
-def end_screen():
+def end_screen():  # функция экрана после проигрыша
     r = True
     while r:
         for event in pygame.event.get():
@@ -314,7 +314,7 @@ def end_screen():
                 final_menu()
 
 
-def final_menu():
+def final_menu():  # функция финального меню после проигрыша
     manager = pygame_gui.UIManager((W, H))
     tomenu = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 100), (200, 50)),
                                           text='В главное меню', manager=manager)
@@ -367,7 +367,7 @@ def final_menu():
             pygame.display.flip()
 
 
-def records():
+def records():  # таблица рекордов
     manager = pygame_gui.UIManager((W, H))
     tofinal = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                            text='Назад', manager=manager)
@@ -414,7 +414,7 @@ def records():
             pygame.display.flip()
 
 
-def setting():
+def setting():  # настройки
     global CATS, NUM
     NUM = 0
     screen = pygame.display.set_mode(size)
@@ -489,7 +489,6 @@ def setting():
                     if buy != 0 and event.ui_element == buy:
                         coin = cur.execute("""SELECT allmoney FROM users WHERE id == ?""", (user,)).fetchall()[0][0]
                         if coin >= NUM * 15:
-                            print(1)
                             cur.execute("""UPDATE users SET allmoney = ? WHERE id = ?""",
                                         (coin - NUM * 15, user,)).fetchall()
                             text_money = coin - NUM * 15
@@ -500,7 +499,7 @@ def setting():
         clock.tick(10)
 
 
-def rules():
+def rules():  # функция окна правил
     fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
     screen.blit(fon, (0, 0))
     manager = pygame_gui.UIManager((W, H))
@@ -545,7 +544,7 @@ def rules():
             pygame.display.flip()
 
 
-def music():
+def music():  # функция окна музыки
     fon = pygame.transform.scale(pygame.image.load('menu.jpg'), (W, H))
     screen.blit(fon, (0, 0))
     manager = pygame_gui.UIManager((W, H))
@@ -613,7 +612,7 @@ def music():
             pygame.display.flip()
 
 
-def menu():
+def menu():  # главное меню
     screen = pygame.display.set_mode(size)
     manager = pygame_gui.UIManager((W, H))
     toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 540), (200, 85)),
@@ -659,17 +658,15 @@ def menu():
             manager.process_events(event)
 
 
-# ВЕСЬ ЦИКЛ РАБОТЫ ПРОГРАММЫ!!!!!
-
-
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()  # группа частей поля
 cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
-bad_cat = pygame.sprite.Group()
-rainbow = pygame.sprite.Group()
-rainbow_bad = pygame.sprite.Group()
-transfer = Transfer(tiles_group, things_group, cat_group)
+bad_cat = pygame.sprite.Group()  # группа плохого кота
+rainbow = pygame.sprite.Group()  # группа радуги главного кота
+rainbow_bad = pygame.sprite.Group()  # группа радуги плохого кота
+transfer = Transfer(tiles_group, things_group, cat_group)  # объект класса для передачи групп спрайтов
+# дальше все картинки для вещей
 things_images_t0 = {'rainbow': load_image('rainbow.png', -1), 'cloud': load_image('cloud.png', -1)}
 things_names_t0 = ['rainbow', 'cloud']
 things_images_t1 = {'nut': load_image('nut.png', -1), 'nuts': load_image('nuts.jpg', -1)}
@@ -697,7 +694,7 @@ things_images_all = [things_images_t0, things_images_t1, things_images_t2, thing
 login, password = start_screen()
 con = sqlite3.connect("nyan.db")
 cur = con.cursor()
-try:
+try:  # запись игрока
     result = cur.execute("""SELECT * FROM users WHERE name == ? AND password == ?""", (login, password)).fetchall()
     try:
         r = result[0]

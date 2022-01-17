@@ -5,7 +5,7 @@ bad_cat = pygame.sprite.Group()
 FPS = 60
 
 
-class BadCat(pygame.sprite.Sprite):
+class BadCat(pygame.sprite.Sprite):  # класс плохого кота
     def __init__(self, y, help, *groups):
         super().__init__(*groups)
         self.photo = Image.open('evil.gif')

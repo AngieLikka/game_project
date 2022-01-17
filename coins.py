@@ -1,4 +1,4 @@
-class Coins:
+class Coins:  # класс монет
     def __init__(self):
         self.coins = 0
 
