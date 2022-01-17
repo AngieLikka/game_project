@@ -1,13 +1,14 @@
 import pygame
-from main import tiles_group, things_group
 
 
 class Cat(pygame.sprite.Sprite):  # класс героя
-    def __init__(self, im, *groups):
+    def __init__(self, im, help, coins, *groups):
         super().__init__(*groups)
         self.photo = im
         self.num = 0
         self.i = 0
+        self.transfer = help
+        self.coins = coins
         try:
             while 1:
                 im.seek(self.num)
@@ -16,34 +17,38 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             pass
         im.seek(self.i)
         im.save('new.png')
-        self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
+        self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
         self.rect = self.image.get_rect()
-        self.rect.x = 150
+        self.rect.x = 200
         self.rect.y = 300
         self.g = 1
+        self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, n, *args):
-        self.rect = self.rect.move(0, n)
-        if self.g == self.num * 23:
+        global coin
+        if self.g == self.num * 5:
             self.photo.seek(self.i)
             self.photo.save('new.png')
             self.i += 1
             self.i %= self.num
-            self.image = pygame.transform.scale(pygame.image.load('new.png'), (100, 85))
+            self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
             self.g = 0
         self.g += 1
-        flag = False
-        for i in tiles_group:
+        flag = True
+        for i in self.transfer.get_tilesgroup():
             if pygame.sprite.collide_mask(self, i):
-                self.rect = self.rect.move(0, 1)
-                if pygame.sprite.collide_mask(self, i):
+                if i.rect.x - 13 <= self.rect.x + self.rect.width <= i.rect.x + 13:
                     self.rect = self.rect.move(-1, 0)
-                self.rect = self.rect.move(0, -1)
-                flag = True
-                break
+                if i.rect.y - 50 <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
+                    flag = False
+                    break
+                if i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
+                    flag = False
+                    break
         if flag:
             self.rect = self.rect.move(0, n)
-        for i in things_group:
+        for i in self.transfer.get_thingsgroup():
             if pygame.sprite.collide_mask(self, i):
-                pass
-            # надо удалить объект и добавить какую-то циферку к сумме баллов
+                i.kill()
+                self.coins.add_coin()
+                return 1

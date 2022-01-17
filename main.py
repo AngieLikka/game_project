@@ -8,11 +8,14 @@ import pygame, pygame.font, pygame.event, pygame.draw, string
 from pygame.locals import *
 from tiles_class import Tiles
 from things_class import Things
+from cat_class import Cat
 from random import randint
 from speed_class import Speed
 from text import TextInputBox
 from rainbow import RainbowBAD, Rainbow
 from cat import BadCat
+from t import Transfer
+from coins import Coins
 
 pygame.init()
 pygame.mixer.music.load('Nyan Cat.mp3')
@@ -21,10 +24,10 @@ size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 300
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
-coin = 0
+coin = Coins()
 new_record = False
 CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif",
         5: "cat6.gif", 6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
@@ -35,58 +38,6 @@ time = 0
 score = 0
 v = 100
 speed = Speed(v)
-
-
-class Cat(pygame.sprite.Sprite):  # класс героя
-    def __init__(self, im, *groups):
-        super().__init__(*groups)
-        self.photo = im
-        self.num = 0
-        self.i = 0
-        try:
-            while 1:
-                im.seek(self.num)
-                self.num += 1
-        except EOFError:
-            pass
-        im.seek(self.i)
-        im.save('new.png')
-        self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
-        self.rect = self.image.get_rect()
-        self.rect.x = 200
-        self.rect.y = 300
-        self.g = 1
-        self.mask = pygame.mask.from_surface(self.image)
-
-    def update(self, n, *args):
-        global coin
-        if self.g == self.num * 5:
-            self.photo.seek(self.i)
-            self.photo.save('new.png')
-            self.i += 1
-            self.i %= self.num
-            self.image = pygame.transform.scale(pygame.image.load('new.png'), (80, 55))
-            self.g = 0
-        self.g += 1
-        flag = True
-        for i in tiles_group:
-            if pygame.sprite.collide_mask(self, i):
-                if i.rect.x - 13 <= self.rect.x + self.rect.width <= i.rect.x + 13:
-                    self.rect = self.rect.move(-1, 0)
-                if i.rect.y - 50 <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
-                    flag = False
-                    break
-                if i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
-                    flag = False
-                    break
-        if flag:
-            self.rect = self.rect.move(0, n)
-        for i in things_group:
-            if pygame.sprite.collide_mask(self, i):
-                i.kill()
-                coin += 1
-                return 1
-            # надо удалить объект и добавить какую-то циферку к сумме баллов
 
 
 def load_image(filname, colorkey=None):  # функция загрузки изображения
@@ -174,20 +125,22 @@ def start_screen():
 
 
 def play():
-    global time, score, coin, new_record
+    global time, score, new_record
     new_record = False
-    coin = 0
+    coin.set_coins()
+    rainbow_bad.empty()
+    rainbow.empty()
     screen = pygame.display.set_mode(size)
     t = True
     font = pygame.font.SysFont(None, 100)
-    cat = Cat(Image.open(CATS[NUM]))
+    cat = Cat(Image.open(CATS[NUM]), transfer, coin)
     cat_group.add(cat)
     score = 0
-    f = 0
-    r = 0
-    y = 0
-    k = 0
-    n = 0
+    schetchik_1 = 0
+    schetchik_2 = 0
+    schetchik_3 = 0
+    schetchik_4 = 0
+    schetchik_5 = 0
     bad = 0
     main_f = False
     for i in range(-30, 220, 30):
@@ -199,33 +152,33 @@ def play():
     with Image.open('fon2.gif') as im:
         try:
             while 1:
-                im.seek(k)
-                k += 1
+                im.seek(schetchik_4)
+                schetchik_4 += 1
         except EOFError:
             pass
     while t:
-        if n == 25:
+        if schetchik_5 == 25:
             with Image.open('fon2.gif') as im:
-                im.seek(y)
+                im.seek(schetchik_3)
                 im.save('newf.png')
-            y += 1
-            y %= k
-            n = 0
-        n += 1
+            schetchik_3 += 1
+            schetchik_3 %= schetchik_4
+            schetchik_5 = 0
+        schetchik_5 += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
                 terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    f = -1
+                    schetchik_1 = -1
                 if event.key == pygame.K_DOWN:
-                    f = 1
+                    schetchik_1 = 1
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
-                    f = 0
+                    schetchik_1 = 0
                 if event.key == pygame.K_UP:
-                    f = 0
+                    schetchik_1 = 0
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
         generate_platforms()
@@ -241,13 +194,13 @@ def play():
             score += 1
         time += 1
         if time % 9000 == 8000:
-            bad = BadCat(random.randint(0, 620))
+            bad = BadCat(random.randint(0, 620), transfer)
             bad_cat.add(bad)
             for i in range(960, 2080, 30):
                 if i % 60 == 0:
-                    rr = RainbowBAD(i, bad.rect.y + 1)
+                    rr = RainbowBAD(i, bad.rect.y + 1, transfer)
                 else:
-                    rr = RainbowBAD(i, bad.rect.y - 1)
+                    rr = RainbowBAD(i, bad.rect.y - 1, transfer)
                 rainbow_bad.add(rr)
         if score % 300 == 0:
             speed.change_v()
@@ -259,11 +212,11 @@ def play():
                 i.kill()
         if bad != 0:
             bad.update(0)
-        if f != 0:
-            r = r + 1
-            if r == 3:
-                cat_group.update(f)
-                r = 0
+        if schetchik_1 != 0:
+            schetchik_2 = schetchik_2 + 1
+            if schetchik_2 == 3:
+                cat_group.update(schetchik_1)
+                schetchik_2 = 0
         if bad != 0:
             main_f = bad.peresec()
         screen.blit(fon, (0, 0))
@@ -292,7 +245,7 @@ def play():
             t = False
             cur.execute("UPDATE users SET allmoney = ? WHERE id = ?",
                         (cur.execute("""SELECT allmoney FROM users WHERE id = ?""",
-                                     (user,)).fetchall()[0][0] + coin // 10, user,)).fetchall()
+                                     (user,)).fetchall()[0][0] + coin.get_coins() // 10, user,)).fetchall()
             mr = cur.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
             if score > int(*mr):
                 new_record = True
@@ -308,7 +261,7 @@ def play():
             end_screen()
         text = FONT.render('Nyan метры: ' + str(score), True, PINK)
         screen.blit(text, (100, 650))
-        text = FONT.render('Собранные предметы: ' + str(coin), True, PINK)
+        text = FONT.render('Собранные предметы: ' + str(coin.get_coins()), True, PINK)
         screen.blit(text, (100, 680))
         pygame.display.update()
 
@@ -370,7 +323,7 @@ def final_menu():
     toplay = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((30, 500), (200, 50)),
                                           text='Играть', manager=manager)
     req = con.execute("""SELECT maxroad FROM users WHERE name = ?""", [login]).fetchone()
-    text = ['Пройденное расстояние: ' + str(score), 'Полученные монеты: ' + str(coin // 10),
+    text = ['Пройденное расстояние: ' + str(score), 'Полученные монеты: ' + str(coin.get_coins() // 10),
             'Максимальное пройденное расстояние: ' + str(req[0])]
     font = pygame.font.SysFont(None, 100)
     record_text = font.render('', True, WHITE)
@@ -716,6 +669,7 @@ things_group = pygame.sprite.Group()  # группа вещей, которые 
 bad_cat = pygame.sprite.Group()
 rainbow = pygame.sprite.Group()
 rainbow_bad = pygame.sprite.Group()
+transfer = Transfer(tiles_group, things_group, cat_group)
 things_images_t0 = {'rainbow': load_image('rainbow.png', -1), 'cloud': load_image('cloud.png', -1)}
 things_names_t0 = ['rainbow', 'cloud']
 things_images_t1 = {'nut': load_image('nut.png', -1), 'nuts': load_image('nuts.jpg', -1)}

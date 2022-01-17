@@ -1,17 +1,15 @@
 import pygame
-import os
 import random
-rainbow = pygame.sprite.Group()
-rainbow_bad = pygame.sprite.Group()
 
 
 class RainbowBAD(pygame.sprite.Sprite):
-    def __init__(self, x, y, *groups):
+    def __init__(self, x, y, help, *groups):
         super().__init__(*groups)
         self.image = pygame.transform.scale(pygame.image.load('rainbowbad.jpg'), (30, 40))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.transfer = help
 
     def update(self, *args):
         self.rect.x = self.rect.x - 2
