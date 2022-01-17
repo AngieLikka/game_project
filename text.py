@@ -1,7 +1,7 @@
 import pygame
 
 
-class TextInputBox(pygame.sprite.Sprite):
+class TextInputBox(pygame.sprite.Sprite):  # класс ввода текста
     def __init__(self, x, y, w, font):
         super().__init__()
         self.color = (255, 255, 255)

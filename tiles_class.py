@@ -2,7 +2,6 @@ import pygame
 import os
 import sys
 
-
 FPS = 60
 all_sprites = pygame.sprite.Group()
 

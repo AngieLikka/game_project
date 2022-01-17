@@ -1,4 +1,4 @@
-class Speed():
+class Speed():  # класс скорости платформ
     def __init__(self, v):
         self.v = v
 
