@@ -24,7 +24,7 @@ size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
 clock = pygame.time.Clock()
-FPS = 60
+FPS = 300
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
 coin = Coins()
@@ -136,11 +136,11 @@ def play():
     cat = Cat(Image.open(CATS[NUM]), transfer, coin)
     cat_group.add(cat)
     score = 0
-    f = 0
-    r = 0
-    y = 0
-    k = 0
-    n = 0
+    schetchik_1 = 0
+    schetchik_2 = 0
+    schetchik_3 = 0
+    schetchik_4 = 0
+    schetchik_5 = 0
     bad = 0
     main_f = False
     for i in range(-30, 220, 30):
@@ -152,33 +152,33 @@ def play():
     with Image.open('fon2.gif') as im:
         try:
             while 1:
-                im.seek(k)
-                k += 1
+                im.seek(schetchik_4)
+                schetchik_4 += 1
         except EOFError:
             pass
     while t:
-        if n == 25:
+        if schetchik_5 == 25:
             with Image.open('fon2.gif') as im:
-                im.seek(y)
+                im.seek(schetchik_3)
                 im.save('newf.png')
-            y += 1
-            y %= k
-            n = 0
-        n += 1
+            schetchik_3 += 1
+            schetchik_3 %= schetchik_4
+            schetchik_5 = 0
+        schetchik_5 += 1
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 t = False
                 terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
-                    f = -1
+                    schetchik_1 = -1
                 if event.key == pygame.K_DOWN:
-                    f = 1
+                    schetchik_1 = 1
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
-                    f = 0
+                    schetchik_1 = 0
                 if event.key == pygame.K_UP:
-                    f = 0
+                    schetchik_1 = 0
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
         generate_platforms()
@@ -212,11 +212,11 @@ def play():
                 i.kill()
         if bad != 0:
             bad.update(0)
-        if f != 0:
-            r = r + 1
-            if r == 3:
-                cat_group.update(f)
-                r = 0
+        if schetchik_1 != 0:
+            schetchik_2 = schetchik_2 + 1
+            if schetchik_2 == 3:
+                cat_group.update(schetchik_1)
+                schetchik_2 = 0
         if bad != 0:
             main_f = bad.peresec()
         screen.blit(fon, (0, 0))
