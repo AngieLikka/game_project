@@ -39,10 +39,13 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             if pygame.sprite.collide_mask(self, i):
                 if i.rect.x - 13 <= self.rect.x + self.rect.width <= i.rect.x + 13:
                     self.rect = self.rect.move(-1, 0)
-                if i.rect.y - 50 <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
+                elif i.rect.y - 50 <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
                     flag = False
                     break
-                if i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
+                elif i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
+                    flag = False
+                    break
+                else:
                     flag = False
                     break
         if flag:
