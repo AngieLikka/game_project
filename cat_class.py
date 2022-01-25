@@ -45,9 +45,6 @@ class Cat(pygame.sprite.Sprite):  # класс героя
                 elif i.rect.y - 50 + i.rect.height <= self.rect.y <= i.rect.y + 50 + i.rect.height and n == -1:
                     flag = False
                     break
-                else:
-                    flag = False
-                    break
         if flag:
             self.rect = self.rect.move(0, n)
         for i in self.transfer.get_thingsgroup():
