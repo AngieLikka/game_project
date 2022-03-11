@@ -21,7 +21,6 @@ class Cat(pygame.sprite.Sprite):  # класс героя
     def new(self):
         im = Image.open(self.photo)
         self.num += 300
-        print(im.size)
         self.num %= im.size[0]
         im_crop = im.crop((self.num, 0, self.num + 300, 200))
         im_crop.save('cat.png', quality=95)
