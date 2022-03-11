@@ -29,8 +29,8 @@ FONT = pygame.font.SysFont(None, 25)
 NUM = 0
 coin = Coins()
 new_record = False
-CATS = {0: "cat0.gif", 1: "cat1.gif", 2: "cat2.gif", 3: "cat3.gif", 4: "cat4.gif",
-        5: "cat6.gif", 6: "cat7.gif", 7: "cat9.gif", 8: "cat10.gif", 9: "cat11.gif"}
+CATS = {0: "cat0.png", 1: "cat1.png", 2: "cat2.png", 3: "cat3.png", 4: "cat4.png",
+        5: "cat6.png", 6: "cat7.png", 7: "cat9.png", 8: "cat10.png", 9: "cat11.png"}
 PINK = (255, 0, 255)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -126,6 +126,7 @@ def start_screen():  # функция экрана заставки
 
 def play():  # функция игры
     global time, score, new_record
+    v_cat_new = 0
     new_record = False
     coin.set_coins()
     rainbow_bad.empty()
@@ -133,7 +134,7 @@ def play():  # функция игры
     screen = pygame.display.set_mode(size)
     t = True
     font = pygame.font.SysFont(None, 100)
-    cat = Cat(Image.open(CATS[NUM]), transfer, coin)
+    cat = Cat(CATS[NUM], transfer, coin)
     cat_group.add(cat)
     score = 0
     schetchik_1 = 0
@@ -219,6 +220,10 @@ def play():  # функция игры
                 schetchik_2 = 0
         if bad != 0:
             main_f = bad.peresec()
+        v_cat_new += 1
+        if v_cat_new == 50:
+            cat.new()
+            v_cat_new = 0
         screen.blit(fon, (0, 0))
         tiles_group.draw(screen)  # отрисовка и обновление спрайтов
         tiles_group.update()
@@ -441,15 +446,15 @@ def setting():  # настройки
     buy = 0
     text_money = str(*money)
     while t:
-        with Image.open(CATS[NUM]) as im:
-            im.seek(i)
-            im.save('new.png')
         i += 1
         i %= k
         screen.blit(fon, (0, 0))
         text_playermoney = font.render('Ваши монеты: {}'.format(text_money), True, BLACK)
         screen.blit(text_playermoney, (350, 100))
-        screen.blit(pygame.transform.scale(pygame.image.load('new.png'), (300, 250)), (300, 180))
+        im = Image.open(CATS[NUM])
+        im_crop = im.crop((0, 0, 300, 200))
+        im_crop.save('cat.png', quality=95)
+        screen.blit(pygame.transform.scale(pygame.image.load('cat.png'), (300, 250)), (300, 180))
         result = cur.execute("""SELECT * FROM kittens WHERE id == ?""", (user,)).fetchall()
         if result[0][NUM + 1] == 0 and buy == 0:
             buy = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((370, 620), (200, 65)),
