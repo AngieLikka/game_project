@@ -8,18 +8,15 @@ import pygame, pygame.font, pygame.event, pygame.draw, string
 from pygame.locals import *
 from tiles_class import Tiles
 from things_class import Things
-from cat_class import Cat
+from cat_class import Cat, tiles_group, BadCat, cat_group, bad_cat
 from random import randint
 from speed_class import Speed
 from text import TextInputBox
 from rainbow import RainbowBAD, Rainbow
-from cat import BadCat
 from t import Transfer
 from coins import Coins
 
 pygame.init()
-pygame.mixer.music.load('Nyan Cat.mp3')
-pygame.mixer.music.play(-1)
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
@@ -214,14 +211,17 @@ def play():  # функция игры
         if bad != 0:
             bad.update(0)
         if schetchik_1 != 0:
-            schetchik_2 = schetchik_2 + 1
+            schetchik_2 += 1
             if schetchik_2 == 3:
                 cat_group.update(schetchik_1)
                 schetchik_2 = 0
+        cat_group.update(0)
         if bad != 0:
             main_f = bad.peresec()
         v_cat_new += 1
         if v_cat_new == 50:
+            if bad != 0:
+                bad.new()
             cat.new()
             v_cat_new = 0
         screen.blit(fon, (0, 0))
@@ -235,7 +235,6 @@ def play():  # функция игры
         bad_cat.draw(screen)
         rainbow.update(cat.rect.x, cat.rect.y)
         rainbow.draw(screen)
-        cat_group.update(0)
         cat_group.draw(screen)
         if cat.rect.x <= -50 or cat.rect.y < 0 or cat.rect.y + cat.rect.height > 700 or main_f:
             if bad != 0:  # проигрыш
@@ -664,10 +663,7 @@ def menu():  # главное меню
 
 
 all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()  # группа частей поля
-cat_group = pygame.sprite.Group()  # группа героя
 things_group = pygame.sprite.Group()  # группа вещей, которые герой собирает
-bad_cat = pygame.sprite.Group()  # группа плохого кота
 rainbow = pygame.sprite.Group()  # группа радуги главного кота
 rainbow_bad = pygame.sprite.Group()  # группа радуги плохого кота
 transfer = Transfer(tiles_group, things_group, cat_group)  # объект класса для передачи групп спрайтов
