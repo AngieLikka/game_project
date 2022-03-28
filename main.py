@@ -18,8 +18,8 @@ from t import Transfer
 from coins import Coins
 
 pygame.init()
-# pygame.mixer.music.load('Nyan Cat.mp3')
-# pygame.mixer.music.play(-1)
+pygame.mixer.music.load('Nyan Cat.mp3')
+pygame.mixer.music.play(-1)
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
