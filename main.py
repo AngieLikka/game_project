@@ -18,8 +18,8 @@ from t import Transfer
 from coins import Coins
 
 pygame.init()
-pygame.mixer.music.load('Nyan Cat.mp3')
-pygame.mixer.music.play(-1)
+# pygame.mixer.music.load('Nyan Cat.mp3')
+# pygame.mixer.music.play(-1)
 size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
@@ -172,13 +172,8 @@ def play():  # функция игры
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     schetchik_1 = -1
-                if event.key == pygame.K_DOWN:
-                    schetchik_1 = 1
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_DOWN:
-                    schetchik_1 = 0
-                if event.key == pygame.K_UP:
-                    schetchik_1 = 0
+                if event.key == pygame.K_SPACE:
+                    schetchik_1 = -1
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
         generate_platforms()  # добавление платформ
