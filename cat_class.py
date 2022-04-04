@@ -36,10 +36,10 @@ class Cat(pygame.sprite.Sprite):  # класс героя
             if pygame.sprite.collide_mask(self, i):
                 if self.rect.x + self.rect.width - 20 <= i.rect.x <= self.rect.x + self.rect.width + 20:
                     self.rect = self.rect.move(-1, 0)
-                if i.rect.y <= self.rect.y + self.rect.height <= i.rect.y + 50 and n == 1:
+                if i.rect.y <= self.rect.y + self.rect.height <= i.rect.y + 50 and n > 0:
                     n = 0
                     break
-                elif i.rect.y - 1 <= self.rect.y <= i.rect.y + 50 and n == -1:
+                elif i.rect.y - 1 <= self.rect.y <= i.rect.y + 50 and n < 0:
                     n = 0
                     break
         self.rect = self.rect.move(0, n)
@@ -48,6 +48,12 @@ class Cat(pygame.sprite.Sprite):  # класс героя
                 i.kill()
                 self.coins.add_coin()
                 return 1
+
+    def tr(self):
+        for i in tiles_group:
+            if pygame.sprite.collide_mask(self, i):
+                if i.rect.y <= self.rect.y + self.rect.height <= i.rect.y + 50:
+                    return True
 
 
 class BadCat(pygame.sprite.Sprite):  # класс плохого кота

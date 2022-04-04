@@ -21,7 +21,7 @@ size = W, H = 900, 700
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Nyan Cat')
 clock = pygame.time.Clock()
-FPS = 300
+FPS = 400
 FONT = pygame.font.SysFont(None, 25)
 NUM = 0
 coin = Coins()
@@ -139,8 +139,10 @@ def play():  # функция игры
     schetchik_3 = 0
     schetchik_4 = 0
     schetchik_5 = 0
+    start = 0
     bad = 0
     main_f = False
+    s = 0
     for i in range(-30, 220, 30):
         if i % 60 == 0:
             rain = Rainbow(i, 306, 30)
@@ -168,10 +170,20 @@ def play():  # функция игры
                 t = False
                 terminate()
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_DOWN and start <= 500:
+                    s = 1
+                if event.key == pygame.K_UP and start <= 500:
+                    s = -1
+                if event.key == pygame.K_UP and cat.tr():
+                    schetchik_1 = 70
+                if event.key == pygame.K_SPACE and cat.tr():
+                    schetchik_1 = 70
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    s = 0
                 if event.key == pygame.K_UP:
-                    schetchik_1 = -1
-                if event.key == pygame.K_SPACE:
-                    schetchik_1 = -1
+                    s = 0
+        cat_group.update(s)
         fon = pygame.transform.scale(pygame.image.load('newf.png'), (W, H))
         screen.blit(fon, (0, 0))
         generate_platforms()  # добавление платформ
@@ -205,11 +217,15 @@ def play():  # функция игры
                 i.kill()
         if bad != 0:
             bad.update(0)
-        if schetchik_1 != 0:
-            schetchik_2 += 1
-            if schetchik_2 == 3:
-                cat_group.update(schetchik_1)
-                schetchik_2 = 0
+        schetchik_2 += 1
+        start += 1
+        if schetchik_2 == 6:
+            if schetchik_1 != 0:
+                cat_group.update(-4)
+                schetchik_1 -= 1
+            if start >= 450:
+                cat_group.update(2)
+            schetchik_2 = 0
         cat_group.update(0)
         if bad != 0:
             main_f = bad.peresec()
